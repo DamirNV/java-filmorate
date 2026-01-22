@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import java.time.LocalDate;
 import java.util.*;
@@ -48,4 +49,11 @@ public class UserController {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
     }
+
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleValidationException(ValidationException e) {
+        return Map.of("error", e.getMessage());
+    }
+
 }
