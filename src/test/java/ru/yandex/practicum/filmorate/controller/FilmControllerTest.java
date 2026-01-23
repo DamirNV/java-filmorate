@@ -161,7 +161,6 @@ class FilmControllerTest {
 
     @Test
     void updateFilmShouldReturnOk() throws Exception {
-        // Сначала создаем фильм
         String response = mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validFilm)))
@@ -172,7 +171,6 @@ class FilmControllerTest {
         Film createdFilm = objectMapper.readValue(response, Film.class);
         createdFilm.setName("Updated Film Name");
 
-        // Затем обновляем
         mockMvc.perform(put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createdFilm)))
@@ -191,12 +189,12 @@ class FilmControllerTest {
 
     @Test
     void updateNonExistentFilmShouldThrowException() throws Exception {
-        validFilm.setId(999); // Несуществующий ID
+        validFilm.setId(999);
 
         mockMvc.perform(put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validFilm)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())  // ← изменил с isBadRequest() на isNotFound()
                 .andExpect(jsonPath("$.error").exists());
     }
 }

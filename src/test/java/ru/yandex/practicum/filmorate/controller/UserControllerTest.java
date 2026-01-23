@@ -173,7 +173,6 @@ class UserControllerTest {
 
     @Test
     void updateUserShouldReturnOk() throws Exception {
-        // Сначала создаем пользователя
         String response = mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
@@ -184,7 +183,6 @@ class UserControllerTest {
         User createdUser = objectMapper.readValue(response, User.class);
         createdUser.setName("Updated Name");
 
-        // Затем обновляем
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createdUser)))
@@ -194,7 +192,6 @@ class UserControllerTest {
 
     @Test
     void updateUserWithEmptyNameShouldUseLogin() throws Exception {
-        // Сначала создаем
         String response = mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
@@ -205,7 +202,6 @@ class UserControllerTest {
         User createdUser = objectMapper.readValue(response, User.class);
         createdUser.setName("");
 
-        // Обновляем с пустым именем
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createdUser)))
@@ -215,7 +211,6 @@ class UserControllerTest {
 
     @Test
     void updateUserWithNullNameShouldUseLogin() throws Exception {
-        // Сначала создаем
         String response = mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
@@ -226,7 +221,6 @@ class UserControllerTest {
         User createdUser = objectMapper.readValue(response, User.class);
         createdUser.setName(null);
 
-        // Обновляем с null именем
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createdUser)))
@@ -245,12 +239,12 @@ class UserControllerTest {
 
     @Test
     void updateNonExistentUserShouldThrowException() throws Exception {
-        validUser.setId(999); // Несуществующий ID
+        validUser.setId(999);
 
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())  // ← изменил с isBadRequest() на isNotFound()
                 .andExpect(jsonPath("$.error").exists());
     }
 }

@@ -35,6 +35,11 @@ public class UserController {
     @PutMapping
     public User update(@Valid @RequestBody User user) {
         log.info("Получен запрос на обновление пользователя с id: {}", user.getId());
+
+        if (user.getId() == 0 || !users.containsKey(user.getId())) {
+            throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
+        }
+
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.debug("Имя пользователя пустое, установлен логин: {}", user.getLogin());
