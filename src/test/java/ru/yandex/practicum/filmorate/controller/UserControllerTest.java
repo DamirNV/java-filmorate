@@ -40,6 +40,14 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.name").value("Test User"));
+    }
+
+    @Test
+    void getAllUsersShouldReturnOk() throws Exception {
+        mockMvc.perform(get("/users"))
                 .andExpect(status().isOk());
     }
 
@@ -50,7 +58,19 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void createUserWithNullEmailShouldReturnBadRequest() throws Exception {
+        validUser.setEmail(null);
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
@@ -60,7 +80,8 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
@@ -70,7 +91,19 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void createUserWithNullLoginShouldReturnBadRequest() throws Exception {
+        validUser.setLogin(null);
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
@@ -80,31 +113,30 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
     void createUserWithEmptyNameShouldUseLogin() throws Exception {
         validUser.setName("");
-        String login = validUser.getLogin();
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(login));
+                .andExpect(jsonPath("$.name").value(validUser.getLogin()));
     }
 
     @Test
     void createUserWithNullNameShouldUseLogin() throws Exception {
         validUser.setName(null);
-        String login = validUser.getLogin();
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(login));
+                .andExpect(jsonPath("$.name").value(validUser.getLogin()));
     }
 
     @Test
@@ -114,7 +146,8 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
@@ -124,12 +157,6 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUser)))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void getAllUsersShouldReturnOk() throws Exception {
-        mockMvc.perform(get("/users"))
                 .andExpect(status().isOk());
     }
 
@@ -152,5 +179,14 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(createdUser)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Name"));
+    }
+
+    @Test
+    void createUserWithEmptyBodyShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
     }
 }
