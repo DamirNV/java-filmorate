@@ -140,6 +140,17 @@ class UserControllerTest {
     }
 
     @Test
+    void createUserWithBlankNameShouldUseLogin() throws Exception {
+        validUser.setName("   ");
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(validUser.getLogin()));
+    }
+
+    @Test
     void createUserWithFutureBirthdayShouldReturnBadRequest() throws Exception {
         validUser.setBirthday(LocalDate.now().plusDays(1));
 
@@ -182,10 +193,63 @@ class UserControllerTest {
     }
 
     @Test
+    void updateUserWithEmptyNameShouldUseLogin() throws Exception {
+        // Сначала создаем
+        String response = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User createdUser = objectMapper.readValue(response, User.class);
+        createdUser.setName("");
+
+        // Обновляем с пустым именем
+        mockMvc.perform(put("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createdUser)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(createdUser.getLogin()));
+    }
+
+    @Test
+    void updateUserWithNullNameShouldUseLogin() throws Exception {
+        // Сначала создаем
+        String response = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User createdUser = objectMapper.readValue(response, User.class);
+        createdUser.setName(null);
+
+        // Обновляем с null именем
+        mockMvc.perform(put("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createdUser)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(createdUser.getLogin()));
+    }
+
+    @Test
     void createUserWithEmptyBodyShouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void updateNonExistentUserShouldThrowException() throws Exception {
+        validUser.setId(999); // Несуществующий ID
+
+        mockMvc.perform(put("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").exists());
     }

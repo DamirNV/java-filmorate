@@ -74,6 +74,17 @@ class FilmControllerTest {
     }
 
     @Test
+    void createFilmWithBlankNameShouldReturnBadRequest() throws Exception {
+        validFilm.setName("   ");
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
     void createFilmWithTooLongDescriptionShouldReturnBadRequest() throws Exception {
         validFilm.setDescription("A".repeat(201));
 
@@ -174,6 +185,17 @@ class FilmControllerTest {
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void updateNonExistentFilmShouldThrowException() throws Exception {
+        validFilm.setId(999); // Несуществующий ID
+
+        mockMvc.perform(put("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").exists());
     }
