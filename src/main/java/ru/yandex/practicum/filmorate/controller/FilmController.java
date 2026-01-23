@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +22,9 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@RequestBody Film film) {
+    public Film create(@Valid @RequestBody Film film) {
         log.info("Получен запрос на создание фильма: {}", film);
-        validate(film);
+        validateReleaseDate(film); // Дополнительная проверка даты
         film.setId(idCounter++);
         films.put(film.getId(), film);
         log.info("Фильм успешно создан с id: {}", film.getId());
@@ -31,34 +32,17 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@RequestBody Film film) {
+    public Film update(@Valid @RequestBody Film film) {
         log.info("Получен запрос на обновление фильма с id: {}", film.getId());
-        validate(film);
+        validateReleaseDate(film); // Дополнительная проверка даты
         films.put(film.getId(), film);
         log.info("Фильм с id {} успешно обновлен", film.getId());
         return film;
     }
 
-    private void validate(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            String error = "Название не может быть пустым";
-            log.warn("Ошибка валидации фильма: {}", error);
-            throw new ValidationException(error);
-        }
-        if (film.getDescription() != null && film.getDescription().length() > 200) {
-            String error = "Описание не может быть длиннее 200 символов";
-            log.warn("Ошибка валидации фильма: {}", error);
-            throw new ValidationException(error);
-        }
-        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            String error = "Дата релиза не может быть раньше 28 декабря 1895 года";
-            log.warn("Ошибка валидации фильма: {}", error);
-            throw new ValidationException(error);
-        }
-        if (film.getDuration() <= 0) {
-            String error = "Продолжительность должна быть положительной";
-            log.warn("Ошибка валидации фильма: {}", error);
-            throw new ValidationException(error);
+    private void validateReleaseDate(Film film) {
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
     }
 
