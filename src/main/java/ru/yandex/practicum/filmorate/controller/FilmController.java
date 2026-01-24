@@ -23,7 +23,6 @@ public class FilmController {
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Получен запрос на создание фильма: {}", film);
-        validateReleaseDate(film);
         film.setId(idCounter++);
         films.put(film.getId(), film);
         log.info("Фильм успешно создан с id: {}", film.getId());
@@ -38,15 +37,9 @@ public class FilmController {
             throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
         }
 
-        validateReleaseDate(film);
         films.put(film.getId(), film);
         log.info("Фильм с id {} успешно обновлен", film.getId());
         return film;
     }
 
-    private void validateReleaseDate(Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
-        }
-    }
 }

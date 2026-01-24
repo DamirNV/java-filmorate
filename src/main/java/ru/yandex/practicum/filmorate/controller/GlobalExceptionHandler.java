@@ -5,6 +5,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import java.util.stream.Collectors;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -17,7 +18,7 @@ public class GlobalExceptionHandler {
                 .getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(java.util.stream.Collectors.joining(", "));
+                .collect(Collectors.joining(", "));
 
         return Map.of("error", errorMessage);
     }
