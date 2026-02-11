@@ -17,12 +17,19 @@ import java.util.List;
 public class FilmController {
 
     private final FilmStorage filmStorage;
-    private final FilmService filmService;  // Внедряем сервис
+    private final FilmService filmService;
 
     @GetMapping
     public List<Film> findAll() {
         log.info("Получен запрос на получение всех фильмов");
         return filmStorage.getAll();
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable int id) {
+        log.info("GET /films/{}", id);
+        return filmStorage.getById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id=" + id + " не найден"));
     }
 
     @PostMapping
