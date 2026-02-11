@@ -1,51 +1,53 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
-import java.util.*;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+
+import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int idCounter = 1;
+
+    private final UserStorage userStorage;
 
     @GetMapping
     public List<User> findAll() {
-        log.info("Получен запрос на получение всех пользователей. Текущее количество: {}", users.size());
-        return new ArrayList<>(users.values());
+        log.info("Получен запрос на получение всех пользователей");
+        return userStorage.getAll();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
         log.info("Получен запрос на создание пользователя: {}", user);
-        user.setId(idCounter++);
+
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.debug("Имя пользователя пустое, установлен логин: {}", user.getLogin());
         }
-        users.put(user.getId(), user);
-        log.info("Пользователь успешно создан с id: {}", user.getId());
-        return user;
+
+        User createdUser = userStorage.add(user);
+        log.info("Пользователь успешно создан с id: {}", createdUser.getId());
+        return createdUser;
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
         log.info("Получен запрос на обновление пользователя с id: {}", user.getId());
 
-        if (user.getId() == 0 || !users.containsKey(user.getId())) {
-            throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
-        }
-
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.debug("Имя пользователя пустое, установлен логин: {}", user.getLogin());
         }
-        users.put(user.getId(), user);
-        log.info("Пользователь с id {} успешно обновлен", user.getId());
-        return user;
+
+        User updatedUser = userStorage.update(user);
+        log.info("Пользователь с id {} успешно обновлен", updatedUser.getId());
+        return updatedUser;
     }
 }
