@@ -44,11 +44,13 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getAll() {
+        log.debug("Запрос всех пользователей. Количество: {}", users.size());
         return new ArrayList<>(users.values());
     }
 
     @Override
     public Optional<User> getById(int id) {
+        log.debug("Поиск пользователя по id: {}", id);
         return Optional.ofNullable(users.get(id));
     }
 }
