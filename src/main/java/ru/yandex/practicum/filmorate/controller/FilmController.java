@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 public class FilmController {
 
     private final FilmStorage filmStorage;
+    private final FilmService filmService;  // Внедряем сервис
 
     @GetMapping
     public List<Film> findAll() {
@@ -37,5 +39,23 @@ public class FilmController {
         Film updatedFilm = filmStorage.update(film);
         log.info("Фильм с id {} успешно обновлен", updatedFilm.getId());
         return updatedFilm;
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable int id, @PathVariable int userId) {
+        log.info("PUT /films/{}/like/{}", id, userId);
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable int id, @PathVariable int userId) {
+        log.info("DELETE /films/{}/like/{}", id, userId);
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopular(@RequestParam(defaultValue = "10") int count) {
+        log.info("GET /films/popular?count={}", count);
+        return filmService.getPopular(count);
     }
 }
