@@ -17,12 +17,19 @@ import java.util.List;
 public class UserController {
 
     private final UserStorage userStorage;
-    private final UserService userService;  // Внедряем сервис
+    private final UserService userService;
 
     @GetMapping
     public List<User> findAll() {
         log.info("Получен запрос на получение всех пользователей");
         return userStorage.getAll();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable int id) {
+        log.info("GET /users/{}", id);
+        return userStorage.getById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
     }
 
     @PostMapping
@@ -52,7 +59,6 @@ public class UserController {
         log.info("Пользователь с id {} успешно обновлен", updatedUser.getId());
         return updatedUser;
     }
-
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable int id, @PathVariable int friendId) {
