@@ -247,4 +247,141 @@ class UserControllerTest {
                 .andExpect(status().isNotFound())  // ← изменил с isBadRequest() на isNotFound()
                 .andExpect(jsonPath("$.error").exists());
     }
+
+    // Добавь эти тесты в существующий UserControllerTest.java
+
+    @Test
+    void getUserById_ShouldReturnUser() throws Exception {
+        String response = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User createdUser = objectMapper.readValue(response, User.class);
+
+        mockMvc.perform(get("/users/{id}", createdUser.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdUser.getId()))
+                .andExpect(jsonPath("$.email").value(validUser.getEmail()));
+    }
+
+    @Test
+    void getUserById_WhenNotFound_ShouldReturn404() throws Exception {
+        mockMvc.perform(get("/users/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void addFriend_ShouldReturnOk() throws Exception {
+        String response1 = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User user1 = objectMapper.readValue(response1, User.class);
+
+        User secondUser = new User();
+        secondUser.setEmail("friend@test.com");
+        secondUser.setLogin("friend");
+        secondUser.setName("Friend");
+        secondUser.setBirthday(LocalDate.of(1991, 1, 1));
+
+        String response2 = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(secondUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User user2 = objectMapper.readValue(response2, User.class);
+
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", user1.getId(), user2.getId()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void removeFriend_ShouldReturnOk() throws Exception {
+        String response1 = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User user1 = objectMapper.readValue(response1, User.class);
+
+        User secondUser = new User();
+        secondUser.setEmail("friend@test.com");
+        secondUser.setLogin("friend");
+        secondUser.setName("Friend");
+        secondUser.setBirthday(LocalDate.of(1991, 1, 1));
+
+        String response2 = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(secondUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User user2 = objectMapper.readValue(response2, User.class);
+
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", user1.getId(), user2.getId()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/users/{id}/friends/{friendId}", user1.getId(), user2.getId()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getFriends_ShouldReturnList() throws Exception {
+        String response = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User createdUser = objectMapper.readValue(response, User.class);
+
+        mockMvc.perform(get("/users/{id}/friends", createdUser.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void getCommonFriends_ShouldReturnList() throws Exception {
+        String response1 = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User user1 = objectMapper.readValue(response1, User.class);
+
+        User secondUser = new User();
+        secondUser.setEmail("friend@test.com");
+        secondUser.setLogin("friend");
+        secondUser.setName("Friend");
+        secondUser.setBirthday(LocalDate.of(1991, 1, 1));
+
+        String response2 = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(secondUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User user2 = objectMapper.readValue(response2, User.class);
+
+        mockMvc.perform(get("/users/{id}/friends/common/{otherId}", user1.getId(), user2.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
 }

@@ -9,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+
 import java.time.LocalDate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -196,5 +198,104 @@ class FilmControllerTest {
                         .content(objectMapper.writeValueAsString(validFilm)))
                 .andExpect(status().isNotFound())  // ← изменил с isBadRequest() на isNotFound()
                 .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void getFilmById_ShouldReturnFilm() throws Exception {
+        String response = mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Film createdFilm = objectMapper.readValue(response, Film.class);
+
+        mockMvc.perform(get("/films/{id}", createdFilm.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdFilm.getId()))
+                .andExpect(jsonPath("$.name").value(validFilm.getName()));
+    }
+
+    @Test
+    void getFilmById_WhenNotFound_ShouldReturn404() throws Exception {
+        mockMvc.perform(get("/films/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void addLike_ShouldReturnOk() throws Exception {
+        String filmResponse = mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Film createdFilm = objectMapper.readValue(filmResponse, Film.class);
+
+        User validUser = new User();
+        validUser.setEmail("test@test.com");
+        validUser.setLogin("testlogin");
+        validUser.setBirthday(LocalDate.of(1990, 1, 1));
+
+        String userResponse = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User createdUser = objectMapper.readValue(userResponse, User.class);
+
+        mockMvc.perform(put("/films/{id}/like/{userId}", createdFilm.getId(), createdUser.getId()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void removeLike_ShouldReturnOk() throws Exception {
+        String filmResponse = mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validFilm)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Film createdFilm = objectMapper.readValue(filmResponse, Film.class);
+
+        User validUser = new User();
+        validUser.setEmail("test@test.com");
+        validUser.setLogin("testlogin");
+        validUser.setBirthday(LocalDate.of(1990, 1, 1));
+
+        String userResponse = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validUser)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        User createdUser = objectMapper.readValue(userResponse, User.class);
+
+        mockMvc.perform(put("/films/{id}/like/{userId}", createdFilm.getId(), createdUser.getId()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/films/{id}/like/{userId}", createdFilm.getId(), createdUser.getId()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getPopular_ShouldReturnList() throws Exception {
+        mockMvc.perform(get("/films/popular"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void getPopular_WithCountParameter_ShouldReturnLimitedList() throws Exception {
+        mockMvc.perform(get("/films/popular?count=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
 }
