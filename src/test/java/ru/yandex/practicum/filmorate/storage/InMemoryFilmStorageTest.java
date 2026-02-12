@@ -41,11 +41,23 @@ class InMemoryFilmStorageTest {
 
     @Test
     void add_ShouldIncrementId() {
-        Film film1 = filmStorage.add(testFilm);
-        Film film2 = filmStorage.add(testFilm);
+        Film film1 = new Film();
+        film1.setName("Film 1");
+        film1.setDescription("Description 1");
+        film1.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film1.setDuration(120);
 
-        assertEquals(1, film1.getId());
-        assertEquals(2, film2.getId());
+        Film film2 = new Film();
+        film2.setName("Film 2");
+        film2.setDescription("Description 2");
+        film2.setReleaseDate(LocalDate.of(2001, 1, 1));
+        film2.setDuration(130);
+
+        Film added1 = filmStorage.add(film1);
+        Film added2 = filmStorage.add(film2);
+
+        assertEquals(1, added1.getId());
+        assertEquals(2, added2.getId());
     }
 
     @Test

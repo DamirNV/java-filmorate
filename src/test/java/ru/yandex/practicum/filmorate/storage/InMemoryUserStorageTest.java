@@ -41,11 +41,23 @@ class InMemoryUserStorageTest {
 
     @Test
     void add_ShouldIncrementId() {
-        User user1 = userStorage.add(testUser);
-        User user2 = userStorage.add(testUser);
+        User user1 = new User();
+        user1.setEmail("user1@test.com");
+        user1.setLogin("user1");
+        user1.setName("User 1");
+        user1.setBirthday(LocalDate.of(1990, 1, 1));
 
-        assertEquals(1, user1.getId());
-        assertEquals(2, user2.getId());
+        User user2 = new User();
+        user2.setEmail("user2@test.com");
+        user2.setLogin("user2");
+        user2.setName("User 2");
+        user2.setBirthday(LocalDate.of(1991, 1, 1));
+
+        User added1 = userStorage.add(user1);
+        User added2 = userStorage.add(user2);
+
+        assertEquals(1, added1.getId());
+        assertEquals(2, added2.getId());
     }
 
     @Test
