@@ -4,20 +4,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(FilmController.class)
 class FilmControllerTest {
 
     @Autowired
@@ -25,6 +30,9 @@ class FilmControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private FilmService filmService;
 
     private Film validFilm;
 
@@ -39,18 +47,30 @@ class FilmControllerTest {
 
     @Test
     void createValidFilmShouldReturnOk() throws Exception {
+        Film createdFilm = new Film();
+        createdFilm.setId(1);
+        createdFilm.setName("Valid Film");
+        createdFilm.setDescription("A valid film description");
+        createdFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
+        createdFilm.setDuration(120);
+
+        when(filmService.createFilm(any(Film.class))).thenReturn(createdFilm);
+
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validFilm)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Valid Film"));
     }
 
     @Test
     void getAllFilmsShouldReturnOk() throws Exception {
+        when(filmService.getAllFilms()).thenReturn(List.of(validFilm));
+
         mockMvc.perform(get("/films"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Valid Film"));
     }
 
     @Test
@@ -100,6 +120,7 @@ class FilmControllerTest {
     @Test
     void createFilmWithExactly200CharDescriptionShouldReturnOk() throws Exception {
         validFilm.setDescription("A".repeat(200));
+        when(filmService.createFilm(any(Film.class))).thenReturn(validFilm);
 
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -121,6 +142,7 @@ class FilmControllerTest {
     @Test
     void createFilmWithExactMinReleaseDateShouldReturnOk() throws Exception {
         validFilm.setReleaseDate(LocalDate.of(1895, 12, 28));
+        when(filmService.createFilm(any(Film.class))).thenReturn(validFilm);
 
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -163,19 +185,18 @@ class FilmControllerTest {
 
     @Test
     void updateFilmShouldReturnOk() throws Exception {
-        String response = mockMvc.perform(post("/films")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validFilm)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        Film updatedFilm = new Film();
+        updatedFilm.setId(1);
+        updatedFilm.setName("Updated Film Name");
+        updatedFilm.setDescription("A valid film description");
+        updatedFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
+        updatedFilm.setDuration(120);
 
-        Film createdFilm = objectMapper.readValue(response, Film.class);
-        createdFilm.setName("Updated Film Name");
+        when(filmService.updateFilm(any(Film.class))).thenReturn(updatedFilm);
 
         mockMvc.perform(put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createdFilm)))
+                        .content(objectMapper.writeValueAsString(updatedFilm)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Film Name"));
     }
@@ -192,33 +213,38 @@ class FilmControllerTest {
     @Test
     void updateNonExistentFilmShouldThrowException() throws Exception {
         validFilm.setId(999);
+        when(filmService.updateFilm(any(Film.class)))
+                .thenThrow(new NotFoundException("Фильм с id=999 не найден"));
 
         mockMvc.perform(put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validFilm)))
-                .andExpect(status().isNotFound())  // ← изменил с isBadRequest() на isNotFound()
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
     void getFilmById_ShouldReturnFilm() throws Exception {
-        String response = mockMvc.perform(post("/films")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validFilm)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        Film createdFilm = new Film();
+        createdFilm.setId(1);
+        createdFilm.setName("Valid Film");
+        createdFilm.setDescription("A valid film description");
+        createdFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
+        createdFilm.setDuration(120);
 
-        Film createdFilm = objectMapper.readValue(response, Film.class);
+        when(filmService.getFilmById(1)).thenReturn(createdFilm);
 
-        mockMvc.perform(get("/films/{id}", createdFilm.getId()))
+        mockMvc.perform(get("/films/{id}", 1))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(createdFilm.getId()))
-                .andExpect(jsonPath("$.name").value(validFilm.getName()));
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Valid Film"));
     }
 
     @Test
     void getFilmById_WhenNotFound_ShouldReturn404() throws Exception {
+        when(filmService.getFilmById(999))
+                .thenThrow(new NotFoundException("Фильм с id=999 не найден"));
+
         mockMvc.perform(get("/films/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").exists());
@@ -226,67 +252,24 @@ class FilmControllerTest {
 
     @Test
     void addLike_ShouldReturnOk() throws Exception {
-        String filmResponse = mockMvc.perform(post("/films")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validFilm)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        doNothing().when(filmService).addLike(1, 1);
 
-        Film createdFilm = objectMapper.readValue(filmResponse, Film.class);
-
-        User validUser = new User();
-        validUser.setEmail("test@test.com");
-        validUser.setLogin("testlogin");
-        validUser.setBirthday(LocalDate.of(1990, 1, 1));
-
-        String userResponse = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validUser)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        User createdUser = objectMapper.readValue(userResponse, User.class);
-
-        mockMvc.perform(put("/films/{id}/like/{userId}", createdFilm.getId(), createdUser.getId()))
+        mockMvc.perform(put("/films/{id}/like/{userId}", 1, 1))
                 .andExpect(status().isOk());
     }
 
     @Test
     void removeLike_ShouldReturnOk() throws Exception {
-        String filmResponse = mockMvc.perform(post("/films")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validFilm)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        doNothing().when(filmService).removeLike(1, 1);
 
-        Film createdFilm = objectMapper.readValue(filmResponse, Film.class);
-
-        User validUser = new User();
-        validUser.setEmail("test@test.com");
-        validUser.setLogin("testlogin");
-        validUser.setBirthday(LocalDate.of(1990, 1, 1));
-
-        String userResponse = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validUser)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        User createdUser = objectMapper.readValue(userResponse, User.class);
-
-        mockMvc.perform(put("/films/{id}/like/{userId}", createdFilm.getId(), createdUser.getId()))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(delete("/films/{id}/like/{userId}", createdFilm.getId(), createdUser.getId()))
+        mockMvc.perform(delete("/films/{id}/like/{userId}", 1, 1))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getPopular_ShouldReturnList() throws Exception {
+        when(filmService.getPopular(10)).thenReturn(List.of(validFilm));
+
         mockMvc.perform(get("/films/popular"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
@@ -294,6 +277,8 @@ class FilmControllerTest {
 
     @Test
     void getPopular_WithCountParameter_ShouldReturnLimitedList() throws Exception {
+        when(filmService.getPopular(5)).thenReturn(List.of(validFilm));
+
         mockMvc.perform(get("/films/popular?count=5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());

@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 
@@ -16,20 +15,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserStorage userStorage;
     private final UserService userService;
 
     @GetMapping
     public List<User> findAll() {
         log.info("Получен запрос на получение всех пользователей");
-        return userStorage.getAll();
+        return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable int id) {
         log.info("GET /users/{}", id);
-        return userStorage.getById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
+        return userService.getUserById(id);
     }
 
     @PostMapping
@@ -41,9 +38,7 @@ public class UserController {
             log.debug("Имя пользователя пустое, установлен логин: {}", user.getLogin());
         }
 
-        User createdUser = userStorage.add(user);
-        log.info("Пользователь успешно создан с id: {}", createdUser.getId());
-        return createdUser;
+        return userService.createUser(user);
     }
 
     @PutMapping
@@ -55,9 +50,7 @@ public class UserController {
             log.debug("Имя пользователя пустое, установлен логин: {}", user.getLogin());
         }
 
-        User updatedUser = userStorage.update(user);
-        log.info("Пользователь с id {} успешно обновлен", updatedUser.getId());
-        return updatedUser;
+        return userService.updateUser(user);
     }
 
     @PutMapping("/{id}/friends/{friendId}")

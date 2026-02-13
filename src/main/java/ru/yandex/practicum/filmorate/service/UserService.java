@@ -71,4 +71,26 @@ public class UserService {
         return userStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
     }
+
+    public List<User> getAllUsers() {
+        log.debug("Запрос всех пользователей");
+        return userStorage.getAll();
+    }
+
+    public User getUserById(int id) {
+        log.debug("Поиск пользователя по id: {}", id);
+        return userStorage.getById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
+    }
+
+    public User createUser(User user) {
+        log.info("Создание пользователя: {}", user);
+        return userStorage.add(user);
+    }
+
+    public User updateUser(User user) {
+        log.info("Обновление пользователя с id: {}", user.getId());
+        return userStorage.update(user);
+    }
+
 }

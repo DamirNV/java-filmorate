@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class FilmService {
 
     private final FilmStorage filmStorage;
-    private final UserStorage userStorage;  // нужен для проверки существования пользователя
+    private final UserStorage userStorage;
 
     public void addLike(int filmId, int userId) {
         log.info("Добавление лайка: фильм {} от пользователя {}", filmId, userId);
@@ -58,4 +58,26 @@ public class FilmService {
         userStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
     }
+
+    public List<Film> getAllFilms() {
+        log.debug("Запрос всех фильмов");
+        return filmStorage.getAll();
+    }
+
+    public Film getFilmById(int id) {
+        log.debug("Поиск фильма по id: {}", id);
+        return filmStorage.getById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id=" + id + " не найден"));
+    }
+
+    public Film createFilm(Film film) {
+        log.info("Создание фильма: {}", film);
+        return filmStorage.add(film);
+    }
+
+    public Film updateFilm(Film film) {
+        log.info("Обновление фильма с id: {}", film.getId());
+        return filmStorage.update(film);
+    }
+
 }

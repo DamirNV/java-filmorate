@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.List;
 
@@ -16,36 +15,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmController {
 
-    private final FilmStorage filmStorage;
     private final FilmService filmService;
 
     @GetMapping
     public List<Film> findAll() {
         log.info("Получен запрос на получение всех фильмов");
-        return filmStorage.getAll();
+        return filmService.getAllFilms();
     }
 
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable int id) {
         log.info("GET /films/{}", id);
-        return filmStorage.getById(id)
-                .orElseThrow(() -> new NotFoundException("Фильм с id=" + id + " не найден"));
+        return filmService.getFilmById(id);
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Получен запрос на создание фильма: {}", film);
-        Film createdFilm = filmStorage.add(film);
-        log.info("Фильм успешно создан с id: {}", createdFilm.getId());
-        return createdFilm;
+        return filmService.createFilm(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
         log.info("Получен запрос на обновление фильма с id: {}", film.getId());
-        Film updatedFilm = filmStorage.update(film);
-        log.info("Фильм с id {} успешно обновлен", updatedFilm.getId());
-        return updatedFilm;
+        return filmService.updateFilm(film);
     }
 
     @PutMapping("/{id}/like/{userId}")
