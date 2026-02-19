@@ -1,209 +1,300 @@
 # Filmorate - REST API для фильмов и пользователей
 
 ## 🎬 Описание проекта
-**Filmorate** (от англ. film — «фильм» и rate — «оценивать») — это бэкенд-сервис для работы с фильмами и оценками пользователей. Сервис позволяет добавлять фильмы, пользователей, управлять ими и получать рекомендации по просмотру.
+**Filmorate** — это бэкенд-сервис для работы с фильмами, оценками пользователей и социальными связями. Сервис позволяет добавлять фильмы и пользователей, ставить лайки, добавлять в друзья и получать рекомендации на основе популярности.
+
+---
 
 ## 🚀 Функциональность
 
-### Фильмы (`/films`)
-- **GET /films** - получить список всех фильмов
-- **POST /films** - создать новый фильм
-- **PUT /films** - обновить существующий фильм
+### 🎥 Фильмы (`/films`)
 
-### Пользователи (`/users`)
-- **GET /users** - получить список всех пользователей
-- **POST /users** - создать нового пользователя
-- **PUT /users** - обновить существующего пользователя
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| `GET` | `/films` | Получить все фильмы |
+| `GET` | `/films/{id}` | Получить фильм по ID |
+| `POST` | `/films` | Создать новый фильм |
+| `PUT` | `/films` | Обновить фильм |
+| `PUT` | `/films/{id}/like/{userId}` | Поставить лайк |
+| `DELETE` | `/films/{id}/like/{userId}` | Убрать лайк |
+| `GET` | `/films/popular?count={count}` | Топ N популярных фильмов |
+
+### 👥 Пользователи (`/users`)
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| `GET` | `/users` | Получить всех пользователей |
+| `GET` | `/users/{id}` | Получить пользователя по ID |
+| `POST` | `/users` | Создать нового пользователя |
+| `PUT` | `/users` | Обновить пользователя |
+| `PUT` | `/users/{id}/friends/{friendId}` | Добавить в друзья |
+| `DELETE` | `/users/{id}/friends/{friendId}` | Удалить из друзей |
+| `GET` | `/users/{id}/friends` | Получить список друзей |
+| `GET` | `/users/{id}/friends/common/{otherId}` | Получить общих друзей |
+
+---
 
 ## 📋 Модели данных
 
-### Фильм (Film)
+### 🎬 Фильм (Film)
 ```json
 {
   "id": 1,
   "name": "Интерстеллар",
   "description": "Фантастический фильм о путешествиях в космосе",
   "releaseDate": "2014-10-26",
-  "duration": 169
+  "duration": 169,
+  "likes": [1, 2, 3]
 }
 ```
 
-### Пользователь (User)
+### 👤 Пользователь (User)
 ```json
 {
   "id": 1,
   "email": "user@example.com",
   "login": "userlogin",
   "name": "Имя пользователя",
-  "birthday": "1990-01-01"
+  "birthday": "1990-01-01",
+  "friends": [2, 3, 4]
 }
 ```
+
+---
 
 ## ✅ Валидация
 
-### Для фильмов (реализована через кастомные и стандартные аннотации):
-- ✅ **Название** не может быть пустым (`@NotBlank`)
-- ✅ **Описание** ≤200 символов (`@Size(max=200)`)
-- ✅ **Дата релиза** ≥28.12.1895 (`@ReleaseDate` - кастомная аннотация)
-- ✅ **Продолжительность** >0 (`@Positive`)
+### 🎬 Для фильмов:
+| Поле | Аннотация | Правило |
+|------|-----------|---------|
+| `name` | `@NotBlank` | Не может быть пустым |
+| `description` | `@Size(max=200)` | ≤200 символов |
+| `releaseDate` | `@ReleaseDate` (кастомная) | ≥28.12.1895 |
+| `duration` | `@Positive` | >0 |
 
-### Для пользователей:
-- ✅ **Email** не пустой и содержит @ (`@Email`)
-- ✅ **Логин** не пустой и без пробелов (`@Pattern(regexp="\\S+")`)
-- ✅ **Имя** может быть пустым → используется логин
-- ✅ **Дата рождения** не в будущем (`@PastOrPresent`)
+### 👤 Для пользователей:
+| Поле | Аннотация | Правило |
+|------|-----------|---------|
+| `email` | `@Email` + `@NotBlank` | Валидный email, не пустой |
+| `login` | `@Pattern(regexp="\\S+")` | Без пробелов, не пустой |
+| `name` | - | Если пустое → используется login |
+| `birthday` | `@PastOrPresent` | Не в будущем |
+
+---
 
 ## 🎯 Особенности реализации
 
-### Кастомная аннотация валидации `@ReleaseDate`
-Проект включает собственную аннотацию для проверки даты релиза фильмов:
+### 🏗 Архитектура
+- **Слоистая архитектура**: Controller → Service → Storage
+- **Dependency Injection** через конструкторы (`@RequiredArgsConstructor`)
+- **Интерфейсы** для Storage (легко заменить InMemory на БД)
+- **Бизнес-логика** вынесена в Service-слой
 
+### 💾 Хранение данных
+- InMemory реализация с `HashMap`
+- Автоматическая генерация ID
+- Двусторонняя связь для друзей (`Set<Integer> friends`)
+- Уникальные лайки (`Set<Integer> likes`)
+
+### 🎨 Кастомная валидация
 ```java
-@Target({ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = ReleaseDateValidator.class)
-public @interface ReleaseDate {
-    String message() default "Дата релиза не может быть раньше 28 декабря 1895 года";
-    String minDate() default "1895-12-28";
-}
+@ReleaseDate(minDate = "1895-12-28")
+private LocalDate releaseDate;
 ```
 
-**Валидатор:**
-```java
-public class ReleaseDateValidator implements ConstraintValidator<ReleaseDate, LocalDate> {
-    private LocalDate minDate;
-    
-    @Override
-    public boolean isValid(LocalDate releaseDate, ConstraintValidatorContext context) {
-        return releaseDate == null || !releaseDate.isBefore(minDate);
-    }
-}
-```
+### 🌐 RESTful API
+- Полное соответствие REST-стандартам
+- Корректные HTTP-методы (GET, POST, PUT, DELETE)
+- PathVariable и RequestParam для гибкости
+
+### 🎯 Обработка ошибок
+- `@RestControllerAdvice` для централизованной обработки
+- **400** — ошибки валидации
+- **404** — ресурс не найден
+- **500** — внутренние ошибки сервера
+
+---
 
 ## 🛠 Технологии
-- **Java 21**
-- **Spring Boot 3.2.4**
-- **Spring Web MVC**
-- **Spring Validation** (включая кастомные аннотации)
-- **Lombok**
-- **SLF4J** для логирования
-- **JUnit 5** для тестирования
-- **MockMvc** для тестирования контроллеров
+
+| Компонент | Технология |
+|-----------|------------|
+| **Язык** | Java 21 |
+| **Фреймворк** | Spring Boot 3.2.4 |
+| **Web** | Spring Web MVC |
+| **Валидация** | Spring Validation + Custom Annotations |
+| **Логирование** | SLF4J + Logbook 3.7.2 (HTTP логи в JSON) |
+| **Утилиты** | Lombok |
+| **Тестирование** | JUnit 5, MockMvc |
+| **Сборка** | Maven |
+
+---
+
+## ⚙️ Конфигурация
+
+### application.yml
+```yaml
+logging:
+  level:
+    org.zalando.logbook: TRACE   # Детальное логирование HTTP-запросов/ответов
+```
+
+---
 
 ## 📁 Структура проекта
+
 ```
 src/main/java/ru/yandex/practicum/filmorate/
-├── FilmorateApplication.java          # Главный класс приложения
+├── FilmorateApplication.java
 ├── controller/
-│   ├── FilmController.java           # Контроллер для фильмов
-│   ├── UserController.java           # Контроллер для пользователей
-│   ├── ValidationException.java      # Исключение для ошибок валидации
-│   ├── NotFoundException.java        # Исключение для "не найдено"
-│   └── GlobalExceptionHandler.java   # Глобальный обработчик исключений
+│   ├── FilmController.java
+│   ├── UserController.java
+│   ├── GlobalExceptionHandler.java
+│   ├── NotFoundException.java
+│   └── ValidationException.java
+├── service/
+│   ├── FilmService.java
+│   └── UserService.java
+├── storage/
+│   ├── film/
+│   │   ├── FilmStorage.java
+│   │   └── InMemoryFilmStorage.java
+│   └── user/
+│       ├── UserStorage.java
+│       └── InMemoryUserStorage.java
 ├── model/
-│   ├── Film.java                     # Модель фильма с аннотациями валидации
-│   └── User.java                     # Модель пользователя с аннотациями валидации
-└── validator/                        # Кастомные валидаторы
-    ├── ReleaseDate.java              # Аннотация @ReleaseDate
-    └── ReleaseDateValidator.java     # Валидатор для даты релиза
+│   ├── Film.java
+│   └── User.java
+└── validator/
+    ├── ReleaseDate.java
+    └── ReleaseDateValidator.java
 
 src/test/java/ru/yandex/practicum/filmorate/
 ├── controller/
-│   ├── FilmControllerTest.java       # Тесты контроллера фильмов
-│   └── UserControllerTest.java       # Тесты контроллера пользователей
-└── FilmorateApplicationTests.java    # Тест запуска приложения
+│   ├── FilmControllerTest.java
+│   └── UserControllerTest.java
+├── model/
+│   └── FilmValidationTest.java
+├── service/
+│   ├── FilmServiceTest.java
+│   └── UserServiceTest.java
+├── storage/
+│   ├── InMemoryFilmStorageTest.java
+│   └── InMemoryUserStorageTest.java
+└── FilmorateApplicationTests.java
 ```
 
+---
+
 ## 🧪 Тестирование
-Проект включает:
-1. **Unit-тесты** для контроллеров с использованием MockMvc
-2. **Интеграционное тестирование** через Postman коллекцию
-3. **Проверка граничных случаев** валидации (включая кастомную аннотацию)
-4. **Покрытие тестами >95%**
+
+### ✅ Unit-тесты (JUnit 5 + MockMvc)
+- **Контроллеры** — валидация, CRUD, эндпоинты друзей и лайков
+- **Сервисы** — бизнес-логика (друзья, лайки, популярные фильмы)
+- **Хранилища** — in-memory реализация (добавление, обновление, удаление, генерация ID)
+- **Покрытие кода: 100%**
+
+### 📬 Интеграционное тестирование
+- Postman-коллекция для проверки всех эндпоинтов
+- Проверка HTTP-статусов и форматов ответов
+
+### 📥 Postman-коллекция
+Файл коллекции: [`postman.json`](postman.json) — импортируйте в Postman для полного тестирования API.
 
 ### Запуск тестов:
 ```bash
-mvn test
+mvn clean test
 ```
 
-## 🚀 Запуск приложения
+---
 
-### 1. Клонировать репозиторий:
+## 📊 Логирование
+
+### 🔍 Logbook (HTTP-логи)
+Автоматическое логирование всех запросов/ответов в формате JSON:
+```json
+{
+  "origin": "remote",
+  "type": "request",
+  "method": "POST",
+  "uri": "http://localhost:8080/users",
+  "body": {"login": "pumpkin", "email": "user@test.com"}
+}
+```
+
+### 📝 Собственные логи
+- `INFO` — основные операции (create, update, delete, addFriend, addLike)
+- `DEBUG` — внутренние операции (getById, getAll)
+- Настроено во всех слоях приложения (контроллеры, сервисы, хранилища)
+
+---
+
+## 🚀 Быстрый старт
+
+### 1. Клонировать репозиторий
 ```bash
-git clone https://github.com/ваш-username/java-filmorate.git
-cd java-filmorate
+git clone https://github.com/ваш-username/filmorate.git
+cd filmorate
 ```
 
-### 2. Запустить приложение:
+### 2. Собрать проект
+```bash
+mvn clean package
+```
+
+### 3. Запустить приложение
 ```bash
 mvn spring-boot:run
 ```
 
-Приложение будет доступно по адресу: `http://localhost:8080`
-
-### 3. Проверить работоспособность:
+### 4. Проверить работу
 ```bash
-# Получить все фильмы
-curl http://localhost:8080/films
-
-# Создать фильм (успешно)
-curl -X POST http://localhost:8080/films \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Фильм","description":"Описание","releaseDate":"2000-01-01","duration":120}'
-
-# Создать фильм с неправильной датой (ошибка валидации через @ReleaseDate)
-curl -X POST http://localhost:8080/films \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Фильм","description":"Описание","releaseDate":"1890-01-01","duration":120}'
-```
-
-## 📝 Примеры запросов
-
-### Создание пользователя:
-```bash
+# Создать пользователя
 curl -X POST http://localhost:8080/users \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "login": "testuser",
-    "birthday": "1990-01-01"
-  }'
-```
+  -d '{"email":"user@test.com","login":"user1","birthday":"1990-01-01"}'
 
-### Обновление фильма:
-```bash
-curl -X PUT http://localhost:8080/films \
+# Создать фильм
+curl -X POST http://localhost:8080/films \
   -H "Content-Type: application/json" \
-  -d '{
-    "id": 1,
-    "name": "Обновленное название",
-    "description": "Новое описание",
-    "releaseDate": "2000-01-01",
-    "duration": 150
-  }'
+  -d '{"name":"Inception","description":"Movie","releaseDate":"2010-07-16","duration":148}'
+
+# Поставить лайк
+curl -X PUT http://localhost:8080/films/1/like/1
+
+# Добавить в друзья
+curl -X PUT http://localhost:8080/users/1/friends/2
+
+# Получить топ фильмов
+curl http://localhost:8080/films/popular?count=5
+
+# Получить пользователя по ID
+curl http://localhost:8080/users/1
+
+# Получить фильм по ID
+curl http://localhost:8080/films/1
 ```
 
-## 🔧 Обработка ошибок
-- **400 Bad Request** - ошибки валидации данных (включая кастомные аннотации)
-- **404 Not Found** - запрашиваемый ресурс не найден
-- Все ошибки возвращаются в формате JSON с описанием
+---
 
-Пример ошибки валидации через `@ReleaseDate`:
-```json
-{
-  "error": "releaseDate: Дата релиза не может быть раньше 28 декабря 1895 года"
-}
-```
+## 📈 Планы по развитию
+- [ ] Подключение базы данных (PostgreSQL + JPA/Hibernate)
+- [ ] Добавление жанров и рейтингов MPAA
+- [ ] Пагинация для списков фильмов и пользователей
+- [ ] Расширенная система рекомендаций на основе предпочтений
+- [ ] Docker-контейнеризация (Dockerfile + docker-compose)
+- [ ] CI/CD через GitHub Actions
 
-## 📊 Ключевые особенности реализации
-1. **Кастомная аннотация валидации** `@ReleaseDate` для проверки минимальной даты релиза
-2. **Хранение данных в памяти** с использованием `HashMap<Integer, Film/User>`
-3. **Автоматическая генерация ID** при создании новых сущностей
-4. **Централизованная обработка исключений** через `GlobalExceptionHandler`
-5. **Логирование всех операций** с использованием `@Slf4j`
-6. **Полная поддержка REST API** с корректными HTTP статусами
+---
 
-## ✅ Требования
-- Java 21 или выше
-- Maven 3.6 или выше
-- Git
+## ✅ Требования к системе
+- **Java 21** или выше
+- **Maven 3.8+**
+- **Git**
+- **Postman** (для ручного тестирования)
+
+---
+
+**Разработано с ❤️ для настоящих киноманов** 🎬🍿
+
+---
