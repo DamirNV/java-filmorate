@@ -127,6 +127,7 @@ private LocalDate releaseDate;
 | **Утилиты** | Lombok |
 | **Тестирование** | JUnit 5, MockMvc |
 | **Сборка** | Maven |
+| **База данных** | PostgreSQL (планируется) |
 
 ---
 
@@ -164,7 +165,11 @@ src/main/java/ru/yandex/practicum/filmorate/
 │       └── InMemoryUserStorage.java
 ├── model/
 │   ├── Film.java
-│   └── User.java
+│   ├── User.java
+│   ├── Genre.java
+│   ├── Mpa.java
+│   ├── Friendship.java
+│   └── FriendshipStatus.java
 └── validator/
     ├── ReleaseDate.java
     └── ReleaseDateValidator.java
@@ -182,6 +187,95 @@ src/test/java/ru/yandex/practicum/filmorate/
 │   ├── InMemoryFilmStorageTest.java
 │   └── InMemoryUserStorageTest.java
 └── FilmorateApplicationTests.java
+```
+
+---
+
+## 🗄️ Схема базы данных
+
+![Database schema](schema.png)
+
+### Описание таблиц:
+
+| Таблица | Назначение |
+|---------|------------|
+| `users` | Хранение пользователей |
+| `films` | Хранение фильмов |
+| `genres` | Справочник жанров |
+| `mpa` | Справочник рейтингов MPA |
+| `film_genres` | Связь фильмов с жанрами (многие-ко-многим) |
+| `likes` | Лайки пользователей к фильмам |
+| `friendships` | Связи дружбы между пользователями со статусами |
+
+---
+
+## 📊 Примеры SQL-запросов
+
+### 1. Получить всех пользователей
+```sql
+SELECT * FROM users;
+```
+
+### 2. Получить все фильмы с их рейтингом MPA
+```sql
+SELECT f.*, m.name as mpa_name 
+FROM films f
+JOIN mpa m ON f.mpa_id = m.id;
+```
+
+### 3. Получить топ-10 популярных фильмов по лайкам
+```sql
+SELECT f.id, f.name, COUNT(l.user_id) as likes_count
+FROM films f
+LEFT JOIN likes l ON f.id = l.film_id
+GROUP BY f.id
+ORDER BY likes_count DESC
+LIMIT 10;
+```
+
+### 4. Получить друзей пользователя (только подтверждённые)
+```sql
+SELECT u.* 
+FROM users u
+JOIN friendships f ON (f.user_id = 1 AND f.friend_id = u.id)
+WHERE f.status = 'CONFIRMED'
+UNION
+SELECT u.*
+FROM users u
+JOIN friendships f ON (f.friend_id = 1 AND f.user_id = u.id)
+WHERE f.status = 'CONFIRMED';
+```
+
+### 5. Получить общих друзей с другим пользователем
+```sql
+SELECT u.*
+FROM users u
+WHERE u.id IN (
+    SELECT f.friend_id FROM friendships f WHERE f.user_id = 1 AND f.status = 'CONFIRMED'
+    UNION
+    SELECT f.user_id FROM friendships f WHERE f.friend_id = 1 AND f.status = 'CONFIRMED'
+)
+AND u.id IN (
+    SELECT f.friend_id FROM friendships f WHERE f.user_id = 2 AND f.status = 'CONFIRMED'
+    UNION
+    SELECT f.user_id FROM friendships f WHERE f.friend_id = 2 AND f.status = 'CONFIRMED'
+);
+```
+
+### 6. Получить жанры фильма
+```sql
+SELECT g.*
+FROM genres g
+JOIN film_genres fg ON g.id = fg.genre_id
+WHERE fg.film_id = 1;
+```
+
+### 7. Получить входящие запросы в друзья для пользователя
+```sql
+SELECT u.*
+FROM users u
+JOIN friendships f ON f.user_id = u.id
+WHERE f.friend_id = 1 AND f.status = 'PENDING';
 ```
 
 ---
@@ -277,24 +371,14 @@ curl http://localhost:8080/films/1
 
 ---
 
-## 📈 Планы по развитию
-- [ ] Подключение базы данных (PostgreSQL + JPA/Hibernate)
-- [ ] Добавление жанров и рейтингов MPAA
-- [ ] Пагинация для списков фильмов и пользователей
-- [ ] Расширенная система рекомендаций на основе предпочтений
-- [ ] Docker-контейнеризация (Dockerfile + docker-compose)
-- [ ] CI/CD через GitHub Actions
-
----
-
 ## ✅ Требования к системе
 - **Java 21** или выше
 - **Maven 3.8+**
 - **Git**
 - **Postman** (для ручного тестирования)
+- **PostgreSQL** (для работы с базой данных)
 
 ---
 
 **Разработано с ❤️ для настоящих киноманов** 🎬🍿
-
----
+```
