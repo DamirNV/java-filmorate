@@ -9,12 +9,18 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -33,14 +39,36 @@ class FilmControllerTest {
     private FilmService filmService;
 
     private Film validFilm;
+    private Mpa mpa;
+    private Genre genre1;
+    private Genre genre2;
+    private Set<Genre> genres;
 
     @BeforeEach
     void setUp() {
+        mpa = new Mpa();
+        mpa.setId(1);
+        mpa.setName("PG-13");
+
+        genre1 = new Genre();
+        genre1.setId(1);
+        genre1.setName("Комедия");
+
+        genre2 = new Genre();
+        genre2.setId(2);
+        genre2.setName("Драма");
+
+        genres = new LinkedHashSet<>();
+        genres.add(genre1);
+        genres.add(genre2);
+
         validFilm = new Film();
         validFilm.setName("Valid Film");
         validFilm.setDescription("A valid film description");
         validFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         validFilm.setDuration(120);
+        validFilm.setMpa(mpa);
+        validFilm.setGenres(genres);
     }
 
     @Test
@@ -51,6 +79,8 @@ class FilmControllerTest {
         createdFilm.setDescription("A valid film description");
         createdFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         createdFilm.setDuration(120);
+        createdFilm.setMpa(mpa);
+        createdFilm.setGenres(genres);
 
         when(filmService.createFilm(any(Film.class))).thenReturn(createdFilm);
 
@@ -59,7 +89,9 @@ class FilmControllerTest {
                         .content(objectMapper.writeValueAsString(validFilm)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Valid Film"));
+                .andExpect(jsonPath("$.name").value("Valid Film"))
+                .andExpect(jsonPath("$.mpa.id").value(1))
+                .andExpect(jsonPath("$.genres[0].id").value(1));
     }
 
     @Test
@@ -68,7 +100,8 @@ class FilmControllerTest {
 
         mockMvc.perform(get("/films"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Valid Film"));
+                .andExpect(jsonPath("$[0].name").value("Valid Film"))
+                .andExpect(jsonPath("$[0].mpa.name").value("PG-13"));
     }
 
     @Test
@@ -189,6 +222,8 @@ class FilmControllerTest {
         updatedFilm.setDescription("A valid film description");
         updatedFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         updatedFilm.setDuration(120);
+        updatedFilm.setMpa(mpa);
+        updatedFilm.setGenres(genres);
 
         when(filmService.updateFilm(any(Film.class))).thenReturn(updatedFilm);
 
@@ -196,7 +231,8 @@ class FilmControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedFilm)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Film Name"));
+                .andExpect(jsonPath("$.name").value("Updated Film Name"))
+                .andExpect(jsonPath("$.mpa.name").value("PG-13"));
     }
 
     @Test
@@ -229,13 +265,16 @@ class FilmControllerTest {
         createdFilm.setDescription("A valid film description");
         createdFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         createdFilm.setDuration(120);
+        createdFilm.setMpa(mpa);
+        createdFilm.setGenres(genres);
 
         when(filmService.getFilmById(1)).thenReturn(createdFilm);
 
         mockMvc.perform(get("/films/{id}", 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Valid Film"));
+                .andExpect(jsonPath("$.name").value("Valid Film"))
+                .andExpect(jsonPath("$.mpa.name").value("PG-13"));
     }
 
     @Test
@@ -246,6 +285,28 @@ class FilmControllerTest {
         mockMvc.perform(get("/films/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void updateGenres_ShouldReturnOk() throws Exception {
+        when(filmService.updateGenres(anyInt(), anySet())).thenReturn(validFilm);
+
+        mockMvc.perform(put("/films/{id}/genres", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(genres)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.genres[0].name").value("Комедия"));
+    }
+
+    @Test
+    void updateMpa_ShouldReturnOk() throws Exception {
+        when(filmService.updateMpa(anyInt(), any(Mpa.class))).thenReturn(validFilm);
+
+        mockMvc.perform(put("/films/{id}/mpa", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(mpa)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mpa.name").value("PG-13"));
     }
 
     @Test

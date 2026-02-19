@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -340,10 +341,18 @@ class UserControllerTest {
     }
 
     @Test
-    void addFriend_ShouldReturnOk() throws Exception {
-        doNothing().when(userService).addFriend(1, 2);
+    void sendFriendRequest_ShouldReturnOk() throws Exception {
+        doNothing().when(userService).sendFriendRequest(1, 2);
 
         mockMvc.perform(put("/users/{id}/friends/{friendId}", 1, 2))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void acceptFriendRequest_ShouldReturnOk() throws Exception {
+        doNothing().when(userService).acceptFriendRequest(1, 2);
+
+        mockMvc.perform(put("/users/{id}/friends/{friendId}/accept", 1, 2))
                 .andExpect(status().isOk());
     }
 
@@ -360,6 +369,15 @@ class UserControllerTest {
         when(userService.getFriends(1)).thenReturn(List.of(validUser));
 
         mockMvc.perform(get("/users/{id}/friends", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void getPendingRequests_ShouldReturnList() throws Exception {
+        when(userService.getPendingRequests(1)).thenReturn(List.of(validUser));
+
+        mockMvc.perform(get("/users/{id}/friends/pending", 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
