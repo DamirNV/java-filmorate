@@ -54,26 +54,38 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable int id, @PathVariable int friendId) {
-        log.info("PUT /users/{}/friends/{}", id, friendId);
-        userService.addFriend(id, friendId);
+    public void sendFriendRequest(@PathVariable int id, @PathVariable int friendId) {
+        log.info("PUT /users/{}/friends/{} - отправка запроса в друзья", id, friendId);
+        userService.sendFriendRequest(id, friendId);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}/accept")
+    public void acceptFriendRequest(@PathVariable int id, @PathVariable int friendId) {
+        log.info("PUT /users/{}/friends/{}/accept - подтверждение дружбы", id, friendId);
+        userService.acceptFriendRequest(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
-        log.info("DELETE /users/{}/friends/{}", id, friendId);
+        log.info("DELETE /users/{}/friends/{} - удаление из друзей", id, friendId);
         userService.removeFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable int id) {
-        log.info("GET /users/{}/friends", id);
+        log.info("GET /users/{}/friends - получение списка друзей", id);
         return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/pending")
+    public List<User> getPendingRequests(@PathVariable int id) {
+        log.info("GET /users/{}/friends/pending - получение входящих запросов", id);
+        return userService.getPendingRequests(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        log.info("GET /users/{}/friends/common/{}", id, otherId);
+        log.info("GET /users/{}/friends/common/{} - получение общих друзей", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
 }

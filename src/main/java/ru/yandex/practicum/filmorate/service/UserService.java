@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.controller.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Friendship;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -18,16 +20,43 @@ public class UserService {
 
     private final UserStorage userStorage;
 
-    public void addFriend(int userId, int friendId) {
-        log.info("Добавление в друзья: пользователь {} добавляет пользователя {}", userId, friendId);
+    public void sendFriendRequest(int userId, int friendId) {
+        log.info("Отправка запроса в друзья: {} -> {}", userId, friendId);
 
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        Friendship request = new Friendship();
+        request.setUserId(userId);
+        request.setFriendId(friendId);
+        request.setStatus(FriendshipStatus.PENDING);
 
-        log.info("Пользователи {} и {} теперь друзья", userId, friendId);
+        user.getFriendships().add(request);
+
+        log.info("Запрос в друзья отправлен от {} к {}", userId, friendId);
+    }
+
+    public void acceptFriendRequest(int userId, int friendId) {
+        log.info("Подтверждение дружбы: {} подтверждает запрос от {}", userId, friendId);
+
+        User user = getUserOrThrow(userId);
+        User friend = getUserOrThrow(friendId);
+
+        Friendship request = user.getFriendships().stream()
+                .filter(f -> f.getUserId() == friendId && f.getFriendId() == userId)
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Запрос в друзья не найден"));
+
+        request.setStatus(FriendshipStatus.CONFIRMED);
+
+        Friendship confirmed = new Friendship();
+        confirmed.setUserId(userId);
+        confirmed.setFriendId(friendId);
+        confirmed.setStatus(FriendshipStatus.CONFIRMED);
+
+        friend.getFriendships().add(confirmed);
+
+        log.info("Дружба между {} и {} подтверждена", userId, friendId);
     }
 
     public void removeFriend(int userId, int friendId) {
@@ -36,8 +65,15 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        user.getFriendships().removeIf(f ->
+                (f.getUserId() == userId && f.getFriendId() == friendId) ||
+                        (f.getUserId() == friendId && f.getFriendId() == userId)
+        );
+
+        friend.getFriendships().removeIf(f ->
+                (f.getUserId() == userId && f.getFriendId() == friendId) ||
+                        (f.getUserId() == friendId && f.getFriendId() == userId)
+        );
 
         log.info("Пользователи {} и {} больше не друзья", userId, friendId);
     }
@@ -47,8 +83,23 @@ public class UserService {
 
         User user = getUserOrThrow(userId);
 
-        return user.getFriends().stream()
-                .map(this::getUserOrThrow)
+        return user.getFriendships().stream()
+                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
+                .map(f -> {
+                    int friendId = f.getUserId() == userId ? f.getFriendId() : f.getUserId();
+                    return getUserOrThrow(friendId);
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<User> getPendingRequests(int userId) {
+        log.info("Получение списка входящих запросов в друзья для {}", userId);
+
+        User user = getUserOrThrow(userId);
+
+        return user.getFriendships().stream()
+                .filter(f -> f.getFriendId() == userId && f.getStatus() == FriendshipStatus.PENDING)
+                .map(f -> getUserOrThrow(f.getUserId()))
                 .collect(Collectors.toList());
     }
 
@@ -58,8 +109,18 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User otherUser = getUserOrThrow(otherUserId);
 
-        Set<Integer> commonFriendIds = user.getFriends().stream()
-                .filter(otherUser.getFriends()::contains)
+        Set<Integer> userFriendIds = user.getFriendships().stream()
+                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
+                .map(f -> f.getUserId() == userId ? f.getFriendId() : f.getUserId())
+                .collect(Collectors.toSet());
+
+        Set<Integer> otherUserFriendIds = otherUser.getFriendships().stream()
+                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
+                .map(f -> f.getUserId() == otherUserId ? f.getFriendId() : f.getUserId())
+                .collect(Collectors.toSet());
+
+        Set<Integer> commonFriendIds = userFriendIds.stream()
+                .filter(otherUserFriendIds::contains)
                 .collect(Collectors.toSet());
 
         return commonFriendIds.stream()
@@ -92,5 +153,4 @@ public class UserService {
         log.info("Обновление пользователя с id: {}", user.getId());
         return userStorage.update(user);
     }
-
 }

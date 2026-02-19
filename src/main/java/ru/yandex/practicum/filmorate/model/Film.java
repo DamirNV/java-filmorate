@@ -27,4 +27,5 @@ public class Film {
     private int duration;
 
     private Set<Genre> genres = new LinkedHashSet<>();
+    private Mpa mpa;
 }
