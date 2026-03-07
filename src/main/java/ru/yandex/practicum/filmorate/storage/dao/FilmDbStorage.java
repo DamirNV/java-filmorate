@@ -16,10 +16,12 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
 
 @Slf4j
 @Primary
@@ -29,7 +31,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private RowMapper<Film> filmRowMapper = (rs, rowNum) -> {
+    private final RowMapper<Film> filmRowMapper = (rs, rowNum) -> {
         Film film = new Film();
         film.setId(rs.getInt("film_id"));
         film.setName(rs.getString("title"));
@@ -47,6 +49,26 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film add(Film film) {
+        if (film.getMpa() == null) {
+            throw new NotFoundException("Рейтинг MPA должен быть указан");
+        }
+
+        String checkMpaSql = "SELECT COUNT(*) FROM mpa_rating WHERE mpa_rating_id = ?";
+        Integer mpaCount = jdbcTemplate.queryForObject(checkMpaSql, Integer.class, film.getMpa().getId());
+        if (mpaCount == null || mpaCount == 0) {
+            throw new NotFoundException("Рейтинг MPA с id=" + film.getMpa().getId() + " не найден");
+        }
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            for (Genre genre : film.getGenres()) {
+                String checkGenreSql = "SELECT COUNT(*) FROM genres WHERE genre_id = ?";
+                Integer genreCount = jdbcTemplate.queryForObject(checkGenreSql, Integer.class, genre.getId());
+                if (genreCount == null || genreCount == 0) {
+                    throw new NotFoundException("Жанр с id=" + genre.getId() + " не найден");
+                }
+            }
+        }
+
         String sql = "INSERT INTO films (title, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -143,6 +165,12 @@ public class FilmDbStorage implements FilmStorage {
         film.setGenres(new LinkedHashSet<>(genres));
     }
 
+    private void loadLikes(Film film) {
+        String sql = "SELECT user_id FROM likes WHERE film_id = ?";
+        List<Integer> likes = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("user_id"), film.getId());
+        film.setLikes(new HashSet<>(likes));
+    }
+
     public void addLike(int filmId, int userId) {
         String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
         jdbcTemplate.update(sql, filmId, userId);
@@ -159,11 +187,4 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT user_id FROM likes WHERE film_id = ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("user_id"), filmId);
     }
-
-    private void loadLikes(Film film) {
-        String sql = "SELECT user_id FROM likes WHERE film_id = ?";
-        List<Integer> likes = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("user_id"), film.getId());
-        film.setLikes(new HashSet<>(likes));
-    }
-
 }

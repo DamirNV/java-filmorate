@@ -103,6 +103,24 @@ public class UserDbStorage implements UserStorage {
     }
 
     public void sendFriendRequest(int userId, int friendId) {
+        String checkUserSql = "SELECT COUNT(*) FROM users WHERE user_id = ?";
+        Integer userCount = jdbcTemplate.queryForObject(checkUserSql, Integer.class, userId);
+        Integer friendCount = jdbcTemplate.queryForObject(checkUserSql, Integer.class, friendId);
+
+        if (userCount == null || userCount == 0) {
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
+        if (friendCount == null || friendCount == 0) {
+            throw new NotFoundException("Пользователь с id=" + friendId + " не найден");
+        }
+
+        String checkDuplicateSql = "SELECT COUNT(*) FROM friendship WHERE user_id = ? AND friend_id = ?";
+        Integer existing = jdbcTemplate.queryForObject(checkDuplicateSql, Integer.class, userId, friendId);
+        if (existing != null && existing > 0) {
+            log.debug("Запрос в друзья уже существует: {} -> {}", userId, friendId);
+            return;
+        }
+
         String sql = "INSERT INTO friendship (user_id, friend_id, status_id) VALUES (?, ?, 1)";
         jdbcTemplate.update(sql, userId, friendId);
         log.info("Запрос в друзья отправлен: {} -> {}", userId, friendId);
@@ -115,6 +133,13 @@ public class UserDbStorage implements UserStorage {
     }
 
     public void removeFriend(int userId, int friendId) {
+        String checkSql = "SELECT COUNT(*) FROM friendship WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
+        Integer existing = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, friendId, friendId, userId);
+
+        if (existing == null || existing == 0) {
+            throw new NotFoundException("Дружба между пользователями " + userId + " и " + friendId + " не найдена");
+        }
+
         String sql = "DELETE FROM friendship WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
         jdbcTemplate.update(sql, userId, friendId, friendId, userId);
         log.info("Дружба удалена между {} и {}", userId, friendId);
