@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -43,7 +44,7 @@ class FilmTest {
         film.setDuration(120);
         film.setMpa(mpa);
         film.setGenres(genres);
-        film.setLikes(Set.of(1, 2, 3));
+        film.setLikes(new HashSet<>(Set.of(1, 2, 3)));
     }
 
     @Test
@@ -110,8 +111,9 @@ class FilmTest {
         Film film2 = new Film();
         film2.setId(1);
         film2.setName("Different Name");
+        film2.setDescription("Different");
 
-        assertEquals(film, film2);
+        assertTrue(film.equals(film2));
     }
 
     @Test
@@ -119,18 +121,19 @@ class FilmTest {
         Film film2 = new Film();
         film2.setId(2);
         film2.setName("Test Film");
+        film2.setDescription("Test Description");
 
-        assertNotEquals(film, film2);
+        assertFalse(film.equals(film2));
     }
 
     @Test
     void equals_SameObject_ShouldReturnTrue() {
-        assertEquals(film, film);
+        assertTrue(film.equals(film));
     }
 
     @Test
     void equals_Null_ShouldReturnFalse() {
-        assertNotEquals(null, film);
+        assertFalse(film.equals(null));
     }
 
     @Test
