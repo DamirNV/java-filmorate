@@ -78,6 +78,9 @@ public class FilmRepository extends BaseRepository<Film> {
             saveGenres(film.getId(), film.getGenres());
         }
 
+        loadGenres(film);
+        loadLikes(film);
+
         return film;
     }
 
@@ -96,6 +99,9 @@ public class FilmRepository extends BaseRepository<Film> {
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             saveGenres(film.getId(), film.getGenres());
         }
+
+        loadGenres(film);
+        loadLikes(film);
 
         return film;
     }
