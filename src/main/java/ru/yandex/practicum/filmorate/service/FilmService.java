@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.Comparator;
 import java.util.List;
@@ -108,4 +109,17 @@ public class FilmService {
 
         return FilmMapper.mapToFilmResponse(updatedFilm);
     }
+
+    public FilmResponse updateMpa(int filmId, Mpa mpa) {
+        log.info("Обновление рейтинга MPA для фильма {}", filmId);
+
+        Film film = filmRepository.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
+
+        film.setMpa(mpa);
+        Film updatedFilm = filmRepository.update(film);
+
+        return FilmMapper.mapToFilmResponse(updatedFilm);
+    }
+
 }
