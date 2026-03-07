@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -23,10 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @ContextConfiguration(classes = {FilmDbStorage.class})
-@Sql(statements = {
-        "INSERT INTO mpa_rating (mpa_rating_id, code) VALUES (1, 'G'), (2, 'PG')",
-        "INSERT INTO genres (genre_id, name) VALUES (1, 'Комедия'), (2, 'Драма')"
-})
 class FilmDbStorageTest {
 
     @Autowired
