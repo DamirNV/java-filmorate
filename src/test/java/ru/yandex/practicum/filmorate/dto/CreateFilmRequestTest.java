@@ -126,6 +126,6 @@ class CreateFilmRequestTest {
         request.setGenres(Set.of(nullGenreId));
 
         Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
-        assertFalse(violations.isEmpty());
+        assertEquals(1, violations.size());
     }
 }
