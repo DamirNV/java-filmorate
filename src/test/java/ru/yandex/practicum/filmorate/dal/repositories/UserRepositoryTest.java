@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.User;
@@ -246,15 +247,14 @@ class UserRepositoryTest {
     }
 
     @Test
-    void addFriend_WhenAlreadyFriends_ShouldNotDuplicate() {
+    void addFriend_WhenAlreadyFriends_ShouldThrowException() {
         User savedUser1 = userRepository.save(testUser);
         User savedUser2 = userRepository.save(testUser2);
 
         userRepository.addFriend(savedUser1.getId(), savedUser2.getId());
-        userRepository.addFriend(savedUser1.getId(), savedUser2.getId());
 
-        List<User> friends = userRepository.getFriends(savedUser1.getId());
-        assertThat(friends).hasSize(1);
+        assertThrows(DuplicateKeyException.class, () ->
+                userRepository.addFriend(savedUser1.getId(), savedUser2.getId()));
     }
 
     @Test
