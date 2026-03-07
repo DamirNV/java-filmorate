@@ -96,6 +96,11 @@ public class UserService {
     public void removeFriend(int userId, int friendId) {
         log.info("Удаление из друзей: {} удаляет {}", userId, friendId);
 
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
+        userRepository.findById(friendId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + friendId + " не найден"));
+
         userRepository.removeFriend(userId, friendId);
         log.info("Пользователь {} удалил из друзей {}", userId, friendId);
     }
