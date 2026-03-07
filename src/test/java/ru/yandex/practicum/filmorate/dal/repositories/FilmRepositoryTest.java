@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -12,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -26,6 +28,9 @@ class FilmRepositoryTest {
 
     @Autowired
     private FilmRepository filmRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private Film testFilm;
     private Mpa testMpa;
@@ -47,7 +52,9 @@ class FilmRepositoryTest {
         testGenre2.setId(2);
         testGenre2.setName("Драма");
 
-        testGenres = Set.of(testGenre1, testGenre2);
+        testGenres = new LinkedHashSet<>();
+        testGenres.add(testGenre1);
+        testGenres.add(testGenre2);
 
         testFilm = new Film();
         testFilm.setName("Test Film");
@@ -56,6 +63,8 @@ class FilmRepositoryTest {
         testFilm.setDuration(120);
         testFilm.setMpa(testMpa);
         testFilm.setGenres(testGenres);
+
+        jdbcTemplate.execute("INSERT INTO users (email, login, name, birthday) VALUES ('likeuser@test.com', 'likeuser', 'Like User', '1990-01-01')");
     }
 
     @Test
@@ -217,7 +226,11 @@ class FilmRepositoryTest {
 
     @Test
     void save_WithDuplicateGenres_ShouldStoreOnlyUnique() {
-        testFilm.setGenres(Set.of(testGenre1, testGenre1));
+        Set<Genre> duplicateGenres = new LinkedHashSet<>();
+        duplicateGenres.add(testGenre1);
+        duplicateGenres.add(testGenre1);
+        testFilm.setGenres(duplicateGenres);
+
         Film savedFilm = filmRepository.save(testFilm);
 
         assertThat(savedFilm.getGenres()).hasSize(1);
