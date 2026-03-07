@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.dto.film.FilmResponse;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.Comparator;
@@ -111,15 +110,15 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    private void validateMpaAndGenres(Mpa mpa, Set<Integer> genreIds) {
+    private void validateMpaAndGenres(Mpa mpa, Set<CreateFilmRequest.GenreId> genreIds) {
         if (mpa != null) {
             mpaRepository.findById(mpa.getId())
                     .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpa.getId() + " не найден"));
         }
         if (genreIds != null) {
-            for (Integer genreId : genreIds) {
-                genreRepository.findById(genreId)
-                        .orElseThrow(() -> new NotFoundException("Жанр с id=" + genreId + " не найден"));
+            for (CreateFilmRequest.GenreId genreId : genreIds) {
+                genreRepository.findById(genreId.getId())
+                        .orElseThrow(() -> new NotFoundException("Жанр с id=" + genreId.getId() + " не найден"));
             }
         }
     }
