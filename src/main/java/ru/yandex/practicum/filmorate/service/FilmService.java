@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.controller.NotFoundException;
 import ru.yandex.practicum.filmorate.dal.repositories.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.repositories.GenreRepository;
+import ru.yandex.practicum.filmorate.dal.repositories.MpaRepository;
 import ru.yandex.practicum.filmorate.dal.repositories.UserRepository;
 import ru.yandex.practicum.filmorate.dto.film.CreateFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.FilmResponse;
@@ -26,6 +28,8 @@ public class FilmService {
 
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
+    private final GenreRepository genreRepository;
+    private final MpaRepository mpaRepository;
 
     public List<FilmResponse> getAllFilms() {
         log.debug("Запрос всех фильмов");
@@ -44,6 +48,8 @@ public class FilmService {
     public FilmResponse createFilm(CreateFilmRequest request) {
         log.info("Создание фильма: {}", request);
 
+        validateMpaAndGenres(request.getMpa(), request.getGenres());
+
         Film film = FilmMapper.mapToFilm(request);
         Film savedFilm = filmRepository.save(film);
 
@@ -61,6 +67,10 @@ public class FilmService {
         Film film = filmRepository.findById(request.getId())
                 .orElseThrow(() -> new NotFoundException("Фильм с id=" + request.getId() + " не найден"));
 
+        if (request.hasMpa() || request.hasGenres()) {
+            validateMpaAndGenres(request.getMpa(), request.getGenres());
+        }
+
         Film updatedFilm = FilmMapper.updateFilmFields(film, request);
         Film savedFilm = filmRepository.update(updatedFilm);
 
@@ -71,7 +81,6 @@ public class FilmService {
     public void addLike(int filmId, int userId) {
         log.info("Добавление лайка: фильм {} от пользователя {}", filmId, userId);
 
-        // Проверяем существование фильма и пользователя
         filmRepository.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
         userRepository.findById(userId)
@@ -98,28 +107,16 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    public FilmResponse updateGenres(int filmId, Set<Genre> genres) {
-        log.info("Обновление жанров для фильма {}", filmId);
-
-        Film film = filmRepository.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
-
-        film.setGenres(genres);
-        Film updatedFilm = filmRepository.update(film);
-
-        return FilmMapper.mapToFilmResponse(updatedFilm);
+    private void validateMpaAndGenres(Mpa mpa, Set<Integer> genreIds) {
+        if (mpa != null) {
+            mpaRepository.findById(mpa.getId())
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpa.getId() + " не найден"));
+        }
+        if (genreIds != null) {
+            for (Integer genreId : genreIds) {
+                genreRepository.findById(genreId)
+                        .orElseThrow(() -> new NotFoundException("Жанр с id=" + genreId + " не найден"));
+            }
+        }
     }
-
-    public FilmResponse updateMpa(int filmId, Mpa mpa) {
-        log.info("Обновление рейтинга MPA для фильма {}", filmId);
-
-        Film film = filmRepository.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
-
-        film.setMpa(mpa);
-        Film updatedFilm = filmRepository.update(film);
-
-        return FilmMapper.mapToFilmResponse(updatedFilm);
-    }
-
 }

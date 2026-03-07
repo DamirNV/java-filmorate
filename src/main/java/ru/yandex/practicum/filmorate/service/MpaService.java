@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.controller.NotFoundException;
 import ru.yandex.practicum.filmorate.dal.repositories.MpaRepository;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
@@ -22,6 +23,7 @@ public class MpaService {
 
     public Mpa getMpaById(int id) {
         log.info("Получение рейтинга MPA по id: {}", id);
-        return mpaRepository.findById(id);
+        return mpaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + id + " не найден"));
     }
 }

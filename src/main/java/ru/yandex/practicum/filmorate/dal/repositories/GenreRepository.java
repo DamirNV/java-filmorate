@@ -3,10 +3,10 @@ package ru.yandex.practicum.filmorate.dal.repositories;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.controller.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class GenreRepository {
@@ -29,12 +29,9 @@ public class GenreRepository {
         return jdbcTemplate.query(sql, mapper);
     }
 
-    public Genre findById(int id) {
+    public Optional<Genre> findById(int id) {
         String sql = "SELECT * FROM genres WHERE genre_id = ?";
         List<Genre> genres = jdbcTemplate.query(sql, mapper, id);
-        if (genres.isEmpty()) {
-            throw new NotFoundException("Жанр с id=" + id + " не найден");
-        }
-        return genres.get(0);
+        return genres.stream().findFirst();
     }
 }
