@@ -19,9 +19,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-@Repository
 @Primary
 @RequiredArgsConstructor
+@Repository("userDbStorage")
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;

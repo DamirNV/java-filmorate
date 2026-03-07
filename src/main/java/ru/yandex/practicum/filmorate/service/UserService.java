@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.controller.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Friendship;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
 
     public void sendFriendRequest(int userId, int friendId) {
@@ -26,12 +28,8 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        Friendship request = new Friendship();
-        request.setUserId(userId);
-        request.setFriendId(friendId);
-        request.setStatus(FriendshipStatus.PENDING);
-
-        user.getFriendships().add(request);
+        String sql = "INSERT INTO friendship (user_id, friend_id, status_id) VALUES (?, ?, 1)";
+        // TODO: реализовать через JdbcTemplate
 
         log.info("Запрос в друзья отправлен от {} к {}", userId, friendId);
     }
@@ -42,19 +40,8 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        Friendship request = user.getFriendships().stream()
-                .filter(f -> f.getUserId() == friendId && f.getFriendId() == userId)
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Запрос в друзья не найден"));
-
-        request.setStatus(FriendshipStatus.CONFIRMED);
-
-        Friendship confirmed = new Friendship();
-        confirmed.setUserId(userId);
-        confirmed.setFriendId(friendId);
-        confirmed.setStatus(FriendshipStatus.CONFIRMED);
-
-        friend.getFriendships().add(confirmed);
+        String sql = "UPDATE friendship SET status_id = 2 WHERE user_id = ? AND friend_id = ?";
+        // TODO: реализовать через JdbcTemplate
 
         log.info("Дружба между {} и {} подтверждена", userId, friendId);
     }
@@ -65,15 +52,8 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriendships().removeIf(f ->
-                (f.getUserId() == userId && f.getFriendId() == friendId) ||
-                        (f.getUserId() == friendId && f.getFriendId() == userId)
-        );
-
-        friend.getFriendships().removeIf(f ->
-                (f.getUserId() == userId && f.getFriendId() == friendId) ||
-                        (f.getUserId() == friendId && f.getFriendId() == userId)
-        );
+        String sql = "DELETE FROM friendship WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
+        // TODO: реализовать через JdbcTemplate
 
         log.info("Пользователи {} и {} больше не друзья", userId, friendId);
     }
@@ -83,13 +63,9 @@ public class UserService {
 
         User user = getUserOrThrow(userId);
 
-        return user.getFriendships().stream()
-                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
-                .map(f -> {
-                    int friendId = f.getUserId() == userId ? f.getFriendId() : f.getUserId();
-                    return getUserOrThrow(friendId);
-                })
-                .collect(Collectors.toList());
+        String sql = "SELECT u.* FROM users u JOIN friendship f ON u.user_id = f.friend_id WHERE f.user_id = ? AND f.status_id = 2";
+        // TODO: реализовать через JdbcTemplate
+        return List.of(); // временно
     }
 
     public List<User> getPendingRequests(int userId) {
@@ -97,10 +73,9 @@ public class UserService {
 
         User user = getUserOrThrow(userId);
 
-        return user.getFriendships().stream()
-                .filter(f -> f.getFriendId() == userId && f.getStatus() == FriendshipStatus.PENDING)
-                .map(f -> getUserOrThrow(f.getUserId()))
-                .collect(Collectors.toList());
+        String sql = "SELECT u.* FROM users u JOIN friendship f ON u.user_id = f.user_id WHERE f.friend_id = ? AND f.status_id = 1";
+        // TODO: реализовать через JdbcTemplate
+        return List.of(); // временно
     }
 
     public List<User> getCommonFriends(int userId, int otherUserId) {
@@ -109,23 +84,11 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User otherUser = getUserOrThrow(otherUserId);
 
-        Set<Integer> userFriendIds = user.getFriendships().stream()
-                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
-                .map(f -> f.getUserId() == userId ? f.getFriendId() : f.getUserId())
-                .collect(Collectors.toSet());
-
-        Set<Integer> otherUserFriendIds = otherUser.getFriendships().stream()
-                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
-                .map(f -> f.getUserId() == otherUserId ? f.getFriendId() : f.getUserId())
-                .collect(Collectors.toSet());
-
-        Set<Integer> commonFriendIds = userFriendIds.stream()
-                .filter(otherUserFriendIds::contains)
-                .collect(Collectors.toSet());
-
-        return commonFriendIds.stream()
-                .map(this::getUserOrThrow)
-                .collect(Collectors.toList());
+        String sql = "SELECT u.* FROM users u " +
+                "JOIN friendship f1 ON u.user_id = f1.friend_id AND f1.user_id = ? AND f1.status_id = 2 " +
+                "JOIN friendship f2 ON u.user_id = f2.friend_id AND f2.user_id = ? AND f2.status_id = 2";
+        // TODO: реализовать через JdbcTemplate
+        return List.of(); // временно
     }
 
     private User getUserOrThrow(int id) {

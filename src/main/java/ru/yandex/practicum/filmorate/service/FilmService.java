@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.controller.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -20,7 +21,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FilmService {
 
+    @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
 
     public void addLike(int filmId, int userId) {
@@ -29,7 +33,8 @@ public class FilmService {
         Film film = getFilmOrThrow(filmId);
         checkUserExists(userId);
 
-        film.getLikes().add(userId);
+        String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+        // TODO: реализовать через JdbcTemplate
         log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
@@ -39,7 +44,8 @@ public class FilmService {
         Film film = getFilmOrThrow(filmId);
         checkUserExists(userId);
 
-        film.getLikes().remove(userId);
+        String sql = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+        // TODO: реализовать через JdbcTemplate
         log.info("Пользователь {} удалил лайк у фильма {}", userId, filmId);
     }
 
@@ -96,5 +102,4 @@ public class FilmService {
         film.setMpa(mpa);
         return filmStorage.update(film);
     }
-
 }

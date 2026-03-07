@@ -25,9 +25,9 @@ import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
-@Repository
 @Primary
 @RequiredArgsConstructor
+@Repository("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
