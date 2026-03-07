@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
-import java.sql.Timestamp;
 import java.util.*;
 
 @Repository
