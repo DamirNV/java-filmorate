@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.validator.ReleaseDate;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -19,6 +20,7 @@ public class UpdateFilmRequest {
     @Size(max = 200, message = "Описание не может быть длиннее 200 символов")
     private String description;
 
+    @ReleaseDate
     private LocalDate releaseDate;
 
     @Positive(message = "Продолжительность должна быть положительной")

@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -10,17 +9,8 @@ import java.util.Set;
 public class User {
     private int id;
     private Set<Friendship> friendships = new HashSet<>();
-
-    @NotBlank(message = "Электронная почта не может быть пустой")
-    @Email(message = "Электронная почта должна быть валидной")
     private String email;
-
-    @NotBlank(message = "Логин не может быть пустым")
-    @Pattern(regexp = "\\S+", message = "Логин не может содержать пробелы")
     private String login;
-
     private String name;
-
-    @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
 }
