@@ -469,4 +469,3 @@ curl http://localhost:8080/films/popular?count=5
 ---
 
 **Разработано с ❤️ для настоящих киноманов** 🎬🍿
-```
