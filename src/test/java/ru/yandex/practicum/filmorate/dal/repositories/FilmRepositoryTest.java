@@ -64,7 +64,9 @@ class FilmRepositoryTest {
         testFilm.setMpa(testMpa);
         testFilm.setGenres(testGenres);
 
-        jdbcTemplate.execute("INSERT INTO users (email, login, name, birthday) VALUES ('likeuser@test.com', 'likeuser', 'Like User', '1990-01-01')");
+        jdbcTemplate.execute("INSERT INTO users (email, login, name, birthday) VALUES ('user1@test.com', 'user1', 'User 1', '1990-01-01')");
+        jdbcTemplate.execute("INSERT INTO users (email, login, name, birthday) VALUES ('user2@test.com', 'user2', 'User 2', '1991-01-01')");
+        jdbcTemplate.execute("INSERT INTO users (email, login, name, birthday) VALUES ('user3@test.com', 'user3', 'User 3', '1992-01-01')");
     }
 
     @Test

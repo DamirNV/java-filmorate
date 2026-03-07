@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class FilmServiceTest {
@@ -280,7 +281,7 @@ class FilmServiceTest {
 
     @Test
     void removeLike_ShouldRemoveLike() {
-        when(filmRepository.findById(1)).thenReturn(Optional.of(film1));
+        lenient().when(filmRepository.findById(1)).thenReturn(Optional.of(film1));
         doNothing().when(filmRepository).removeLike(1, 100);
 
         filmService.removeLike(1, 100);

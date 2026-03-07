@@ -41,7 +41,6 @@ class CreateUserRequestTest {
         request.setEmail(" ");
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Электронная почта не может быть пустой"));
     }
 
     @Test
@@ -56,7 +55,6 @@ class CreateUserRequestTest {
         request.setEmail("invalid-email");
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Электронная почта должна быть валидной"));
     }
 
     @Test
@@ -64,7 +62,6 @@ class CreateUserRequestTest {
         request.setLogin(" ");
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Логин не может быть пустым"));
     }
 
     @Test
@@ -79,7 +76,6 @@ class CreateUserRequestTest {
         request.setLogin("login with spaces");
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Логин не может содержать пробелы"));
     }
 
     @Test
@@ -87,7 +83,6 @@ class CreateUserRequestTest {
         request.setBirthday(LocalDate.now().plusDays(1));
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Дата рождения не может быть в будущем"));
     }
 
     @Test

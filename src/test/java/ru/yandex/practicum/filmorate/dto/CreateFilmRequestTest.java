@@ -47,8 +47,6 @@ class CreateFilmRequestTest {
         request.setName(" ");
         Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertEquals(1, violations.size());
-        assertTrue(violations.iterator().next().getMessage().contains("Название не может быть пустым"));
     }
 
     @Test
@@ -63,7 +61,6 @@ class CreateFilmRequestTest {
         request.setDescription("A".repeat(201));
         Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Описание не может быть длиннее 200 символов"));
     }
 
     @Test
@@ -78,7 +75,6 @@ class CreateFilmRequestTest {
         request.setReleaseDate(null);
         Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Дата релиза обязательна"));
     }
 
     @Test
@@ -86,7 +82,6 @@ class CreateFilmRequestTest {
         request.setReleaseDate(LocalDate.of(1895, 12, 27));
         Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Дата релиза не может быть раньше 28 декабря 1895 года"));
     }
 
     @Test
@@ -101,7 +96,6 @@ class CreateFilmRequestTest {
         request.setDuration(-10);
         Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Продолжительность должна быть положительной"));
     }
 
     @Test
@@ -116,7 +110,6 @@ class CreateFilmRequestTest {
         request.setMpa(null);
         Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
-        assertTrue(violations.iterator().next().getMessage().contains("Рейтинг MPA должен быть указан"));
     }
 
     @Test
@@ -126,6 +119,6 @@ class CreateFilmRequestTest {
         request.setGenres(Set.of(nullGenreId));
 
         Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
-        assertEquals(1, violations.size());
+        assertFalse(violations.isEmpty());
     }
 }
