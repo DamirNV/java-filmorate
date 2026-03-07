@@ -19,10 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Primary
@@ -111,6 +108,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT f.*, m.name as mpa_name FROM films f LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_rating_id";
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper);
         films.forEach(this::loadGenres);
+        films.forEach(this::loadLikes);
         log.debug("Запрос всех фильмов из БД, найдено: {}", films.size());
         return films;
     }
@@ -120,6 +118,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT f.*, m.name as mpa_name FROM films f LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_rating_id WHERE f.film_id = ?";
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper, id);
         films.forEach(this::loadGenres);
+        films.forEach(this::loadLikes);
         return films.stream().findFirst();
     }
 
@@ -143,4 +142,28 @@ public class FilmDbStorage implements FilmStorage {
         }, film.getId());
         film.setGenres(new LinkedHashSet<>(genres));
     }
+
+    public void addLike(int filmId, int userId) {
+        String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+        jdbcTemplate.update(sql, filmId, userId);
+        log.info("Лайк добавлен: фильм {} от пользователя {}", filmId, userId);
+    }
+
+    public void removeLike(int filmId, int userId) {
+        String sql = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+        jdbcTemplate.update(sql, filmId, userId);
+        log.info("Лайк удален: фильм {} от пользователя {}", filmId, userId);
+    }
+
+    public List<Integer> getFilmLikes(int filmId) {
+        String sql = "SELECT user_id FROM likes WHERE film_id = ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("user_id"), filmId);
+    }
+
+    private void loadLikes(Film film) {
+        String sql = "SELECT user_id FROM likes WHERE film_id = ?";
+        List<Integer> likes = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("user_id"), film.getId());
+        film.setLikes(new HashSet<>(likes));
+    }
+
 }

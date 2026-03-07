@@ -16,4 +16,16 @@ public interface UserStorage {
 
     Optional<User> getById(int id);
 
+    void sendFriendRequest(int userId, int friendId);
+
+    void acceptFriendRequest(int userId, int friendId);
+
+    void removeFriend(int userId, int friendId);
+
+    List<User> getFriends(int userId);
+
+    List<User> getPendingRequests(int userId);
+
+    List<User> getCommonFriends(int userId, int otherUserId);
+
 }

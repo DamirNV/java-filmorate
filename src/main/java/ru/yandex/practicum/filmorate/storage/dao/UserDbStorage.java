@@ -101,4 +101,43 @@ public class UserDbStorage implements UserStorage {
         List<User> users = jdbcTemplate.query(sql, userRowMapper, id);
         return users.stream().findFirst();
     }
+
+    public void sendFriendRequest(int userId, int friendId) {
+        String sql = "INSERT INTO friendship (user_id, friend_id, status_id) VALUES (?, ?, 1)";
+        jdbcTemplate.update(sql, userId, friendId);
+        log.info("Запрос в друзья отправлен: {} -> {}", userId, friendId);
+    }
+
+    public void acceptFriendRequest(int userId, int friendId) {
+        String sql = "UPDATE friendship SET status_id = 2 WHERE user_id = ? AND friend_id = ?";
+        jdbcTemplate.update(sql, friendId, userId);
+        log.info("Запрос в друзья подтвержден: {} принял запрос от {}", userId, friendId);
+    }
+
+    public void removeFriend(int userId, int friendId) {
+        String sql = "DELETE FROM friendship WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
+        jdbcTemplate.update(sql, userId, friendId, friendId, userId);
+        log.info("Дружба удалена между {} и {}", userId, friendId);
+    }
+
+    public List<User> getFriends(int userId) {
+        String sql = "SELECT u.* FROM users u " +
+                "JOIN friendship f ON u.user_id = f.friend_id " +
+                "WHERE f.user_id = ? AND f.status_id = 2";
+        return jdbcTemplate.query(sql, userRowMapper, userId);
+    }
+
+    public List<User> getPendingRequests(int userId) {
+        String sql = "SELECT u.* FROM users u " +
+                "JOIN friendship f ON u.user_id = f.user_id " +
+                "WHERE f.friend_id = ? AND f.status_id = 1";
+        return jdbcTemplate.query(sql, userRowMapper, userId);
+    }
+
+    public List<User> getCommonFriends(int userId, int otherUserId) {
+        String sql = "SELECT u.* FROM users u " +
+                "JOIN friendship f1 ON u.user_id = f1.friend_id AND f1.user_id = ? AND f1.status_id = 2 " +
+                "JOIN friendship f2 ON u.user_id = f2.friend_id AND f2.user_id = ? AND f2.status_id = 2";
+        return jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
+    }
 }

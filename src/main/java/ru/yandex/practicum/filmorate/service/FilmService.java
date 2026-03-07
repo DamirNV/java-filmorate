@@ -33,8 +33,7 @@ public class FilmService {
         Film film = getFilmOrThrow(filmId);
         checkUserExists(userId);
 
-        String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
-        // TODO: реализовать через JdbcTemplate
+        filmStorage.addLike(filmId, userId);  // ← новый метод
         log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
@@ -44,8 +43,7 @@ public class FilmService {
         Film film = getFilmOrThrow(filmId);
         checkUserExists(userId);
 
-        String sql = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
-        // TODO: реализовать через JdbcTemplate
+        filmStorage.removeLike(filmId, userId);  // ← новый метод
         log.info("Пользователь {} удалил лайк у фильма {}", userId, filmId);
     }
 

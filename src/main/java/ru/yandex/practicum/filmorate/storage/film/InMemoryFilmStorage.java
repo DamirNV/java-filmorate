@@ -55,4 +55,16 @@ public class InMemoryFilmStorage implements FilmStorage {
         log.debug("Поиск фильма по id: {}", id);
         return Optional.ofNullable(films.get(id));
     }
+
+    @Override
+    public void addLike(int filmId, int userId) {
+        // InMemory не поддерживает лайки через БД
+        log.debug("addLike вызван для InMemoryFilmStorage, но операция не поддерживается");
+    }
+
+    @Override
+    public void removeLike(int filmId, int userId) {
+        // InMemory не поддерживает лайки через БД
+        log.debug("removeLike вызван для InMemoryFilmStorage, но операция не поддерживается");
+    }
 }

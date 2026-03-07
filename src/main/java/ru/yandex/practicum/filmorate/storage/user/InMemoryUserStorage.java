@@ -55,4 +55,38 @@ public class InMemoryUserStorage implements UserStorage {
         log.debug("Поиск пользователя по id: {}", id);
         return Optional.ofNullable(users.get(id));
     }
+
+    @Override
+    public void sendFriendRequest(int userId, int friendId) {
+        log.debug("sendFriendRequest вызван для InMemoryUserStorage, операция не поддерживается (работает только БД)");
+    }
+
+    @Override
+    public void acceptFriendRequest(int userId, int friendId) {
+        log.debug("acceptFriendRequest вызван для InMemoryUserStorage, операция не поддерживается (работает только БД)");
+    }
+
+    @Override
+    public void removeFriend(int userId, int friendId) {
+        log.debug("removeFriend вызван для InMemoryUserStorage, операция не поддерживается (работает только БД)");
+    }
+
+    @Override
+    public List<User> getFriends(int userId) {
+        log.debug("getFriends вызван для InMemoryUserStorage, возвращаем пустой список");
+        return List.of();
+    }
+
+    @Override
+    public List<User> getPendingRequests(int userId) {
+        log.debug("getPendingRequests вызван для InMemoryUserStorage, возвращаем пустой список");
+        return List.of();
+    }
+
+    @Override
+    public List<User> getCommonFriends(int userId, int otherUserId) {
+        log.debug("getCommonFriends вызван для InMemoryUserStorage, возвращаем пустой список");
+        return List.of();
+    }
+
 }
