@@ -15,7 +15,8 @@ MERGE INTO genres (genre_id, name) VALUES
 (5, 'Документальный'),
 (6, 'Боевик');
 
--- Заполняем статусы дружбы
+-- Заполняем статусы дружбы (оставляем для будущего расширения)
 MERGE INTO friendship_status (status_id, name) VALUES
-(1, 'PENDING'),
-(2, 'CONFIRMED');
+(1, 'FRIEND');
+-- Здесь можно будет добавить другие статусы позже:
+-- (2, 'SUBSCRIBER'), (3, 'BLOCKED') и т.д.

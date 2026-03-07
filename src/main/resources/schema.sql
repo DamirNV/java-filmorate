@@ -60,11 +60,10 @@ CREATE TABLE IF NOT EXISTS friendship_status (
     name VARCHAR(20) NOT NULL UNIQUE
 );
 
--- Таблица дружбы
+-- Таблица дружбы (односторонняя)
 CREATE TABLE IF NOT EXISTS friendship (
     user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     friend_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    status_id INTEGER NOT NULL REFERENCES friendship_status(status_id),
     PRIMARY KEY (user_id, friend_id),
     CHECK (user_id != friend_id)
 );

@@ -44,15 +44,9 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void sendFriendRequest(@PathVariable int id, @PathVariable int friendId) {
-        log.info("PUT /users/{}/friends/{} - отправка запроса в друзья", id, friendId);
-        userService.sendFriendRequest(id, friendId);
-    }
-
-    @PutMapping("/{id}/friends/{friendId}/accept")
-    public void acceptFriendRequest(@PathVariable int id, @PathVariable int friendId) {
-        log.info("PUT /users/{}/friends/{}/accept - подтверждение дружбы", id, friendId);
-        userService.acceptFriendRequest(id, friendId);
+    public void addFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.info("PUT /users/{}/friends/{} - добавление друга", id, friendId);
+        userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
@@ -65,12 +59,6 @@ public class UserController {
     public List<UserResponse> getFriends(@PathVariable int id) {
         log.info("GET /users/{}/friends - получение списка друзей", id);
         return userService.getFriends(id);
-    }
-
-    @GetMapping("/{id}/friends/pending")
-    public List<UserResponse> getPendingRequests(@PathVariable int id) {
-        log.info("GET /users/{}/friends/pending - получение входящих запросов", id);
-        return userService.getPendingRequests(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")

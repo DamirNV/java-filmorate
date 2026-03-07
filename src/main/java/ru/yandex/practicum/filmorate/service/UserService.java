@@ -81,30 +81,23 @@ public class UserService {
         return UserMapper.mapToUserResponse(savedUser);
     }
 
-    public void sendFriendRequest(int userId, int friendId) {
-        log.info("Отправка запроса в друзья: {} -> {}", userId, friendId);
+    public void addFriend(int userId, int friendId) {
+        log.info("Добавление друга: {} добавляет {}", userId, friendId);
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
         userRepository.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + friendId + " не найден"));
 
-        userRepository.sendFriendRequest(userId, friendId);
-        log.info("Запрос в друзья отправлен от {} к {}", userId, friendId);
-    }
-
-    public void acceptFriendRequest(int userId, int friendId) {
-        log.info("Подтверждение дружбы: {} подтверждает запрос от {}", userId, friendId);
-
-        userRepository.acceptFriendRequest(userId, friendId);
-        log.info("Дружба между {} и {} подтверждена", userId, friendId);
+        userRepository.addFriend(userId, friendId);
+        log.info("Пользователь {} добавил в друзья {}", userId, friendId);
     }
 
     public void removeFriend(int userId, int friendId) {
-        log.info("Удаление из друзей: пользователь {} удаляет пользователя {}", userId, friendId);
+        log.info("Удаление из друзей: {} удаляет {}", userId, friendId);
 
         userRepository.removeFriend(userId, friendId);
-        log.info("Пользователи {} и {} больше не друзья", userId, friendId);
+        log.info("Пользователь {} удалил из друзей {}", userId, friendId);
     }
 
     public List<UserResponse> getFriends(int userId) {
@@ -114,17 +107,6 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
 
         return userRepository.getFriends(userId).stream()
-                .map(UserMapper::mapToUserResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<UserResponse> getPendingRequests(int userId) {
-        log.info("Получение списка входящих запросов в друзья для {}", userId);
-
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
-
-        return userRepository.getPendingRequests(userId).stream()
                 .map(UserMapper::mapToUserResponse)
                 .collect(Collectors.toList());
     }

@@ -6,8 +6,6 @@ import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +18,19 @@ public class UserRepository extends BaseRepository<User> {
     private static final String INSERT_QUERY = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
     private static final String DELETE_QUERY = "DELETE FROM users WHERE user_id = ?";
+
+    private static final String INSERT_FRIEND_QUERY = "INSERT INTO friendship (user_id, friend_id, status_id) VALUES (?, ?, ?)";
+    private static final String DELETE_FRIEND_QUERY = "DELETE FROM friendship WHERE user_id = ? AND friend_id = ? AND status_id = ?";
+    private static final String FIND_FRIENDS_QUERY =
+            "SELECT u.* FROM users u " +
+                    "JOIN friendship f ON u.user_id = f.friend_id " +
+                    "WHERE f.user_id = ? AND f.status_id = ?";
+    private static final String FIND_COMMON_FRIENDS_QUERY =
+            "SELECT u.* FROM users u " +
+                    "JOIN friendship f1 ON u.user_id = f1.friend_id AND f1.user_id = ? AND f1.status_id = ? " +
+                    "JOIN friendship f2 ON u.user_id = f2.friend_id AND f2.user_id = ? AND f2.status_id = ?";
+
+    private static final int FRIEND_STATUS = 1;
 
     public UserRepository(JdbcTemplate jdbc, UserRowMapper mapper) {
         super(jdbc, mapper);
@@ -65,39 +76,20 @@ public class UserRepository extends BaseRepository<User> {
         return delete(DELETE_QUERY, userId);
     }
 
-    public void sendFriendRequest(int userId, int friendId) {
-        String sql = "INSERT INTO friendship (user_id, friend_id, status_id) VALUES (?, ?, 1)";
-        jdbc.update(sql, userId, friendId);
-    }
-
-    public void acceptFriendRequest(int userId, int friendId) {
-        String sql = "UPDATE friendship SET status_id = 2 WHERE user_id = ? AND friend_id = ?";
-        jdbc.update(sql, friendId, userId);
+    public void addFriend(int userId, int friendId) {
+        jdbc.update(INSERT_FRIEND_QUERY, userId, friendId, FRIEND_STATUS);
     }
 
     public void removeFriend(int userId, int friendId) {
-        String sql = "DELETE FROM friendship WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
-        jdbc.update(sql, userId, friendId, friendId, userId);
+        jdbc.update(DELETE_FRIEND_QUERY, userId, friendId, FRIEND_STATUS);
     }
 
     public List<User> getFriends(int userId) {
-        String sql = "SELECT u.* FROM users u " +
-                "JOIN friendship f ON u.user_id = f.friend_id " +
-                "WHERE f.user_id = ? AND f.status_id = 2";
-        return jdbc.query(sql, mapper, userId);
-    }
-
-    public List<User> getPendingRequests(int userId) {
-        String sql = "SELECT u.* FROM users u " +
-                "JOIN friendship f ON u.user_id = f.user_id " +
-                "WHERE f.friend_id = ? AND f.status_id = 1";
-        return jdbc.query(sql, mapper, userId);
+        return jdbc.query(FIND_FRIENDS_QUERY, mapper, userId, FRIEND_STATUS);
     }
 
     public List<User> getCommonFriends(int userId, int otherUserId) {
-        String sql = "SELECT u.* FROM users u " +
-                "JOIN friendship f1 ON u.user_id = f1.friend_id AND f1.user_id = ? AND f1.status_id = 2 " +
-                "JOIN friendship f2 ON u.user_id = f2.friend_id AND f2.user_id = ? AND f2.status_id = 2";
-        return jdbc.query(sql, mapper, userId, otherUserId);
+        return jdbc.query(FIND_COMMON_FRIENDS_QUERY, mapper,
+                userId, FRIEND_STATUS, otherUserId, FRIEND_STATUS);
     }
 }
