@@ -180,7 +180,6 @@ class FilmMapperTest {
     @Test
     void updateFilmFields_WithEmptyGenres_ShouldUpdateToEmpty() {
         updateRequest.setGenres(new LinkedHashSet<>());
-
         Film result = FilmMapper.updateFilmFields(film, updateRequest);
 
         assertTrue(result.getGenres().isEmpty());
