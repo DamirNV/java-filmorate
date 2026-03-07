@@ -71,8 +71,10 @@ class UserTest {
         User user2 = new User();
         user2.setId(1);
         user2.setEmail("different@test.com");
+        user2.setLogin("different");
+        user2.setName("Different");
 
-        assertEquals(user, user2);
+        assertTrue(user.equals(user2));
     }
 
     @Test
@@ -80,18 +82,20 @@ class UserTest {
         User user2 = new User();
         user2.setId(2);
         user2.setEmail("test@test.com");
+        user2.setLogin("testlogin");
+        user2.setName("Test User");
 
-        assertNotEquals(user, user2);
+        assertFalse(user.equals(user2));
     }
 
     @Test
     void equals_SameObject_ShouldReturnTrue() {
-        assertEquals(user, user);
+        assertTrue(user.equals(user));
     }
 
     @Test
     void equals_Null_ShouldReturnFalse() {
-        assertNotEquals(null, user);
+        assertFalse(user.equals(null));
     }
 
     @Test
