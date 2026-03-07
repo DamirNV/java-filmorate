@@ -23,12 +23,6 @@ public class GlobalExceptionHandler {
         return Map.of("error", errorMessage);
     }
 
-    @ExceptionHandler(ValidationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleValidationException(ValidationException ex) {
-        return Map.of("error", ex.getMessage());
-    }
-
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFoundException(NotFoundException ex) {
