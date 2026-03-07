@@ -101,7 +101,11 @@ public class FilmService {
         log.info("Получение {} самых популярных фильмов", count);
 
         return filmRepository.findAll().stream()
-                .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
+                .sorted((film1, film2) -> {
+                    int likes1 = film1.getLikes() != null ? film1.getLikes().size() : 0;
+                    int likes2 = film2.getLikes() != null ? film2.getLikes().size() : 0;
+                    return Integer.compare(likes2, likes1);
+                })
                 .limit(count)
                 .map(FilmMapper::mapToFilmResponse)
                 .collect(Collectors.toList());
