@@ -129,8 +129,12 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getAll() {
         String sql = "SELECT f.*, m.name as mpa_name FROM films f LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_rating_id";
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper);
-        films.forEach(this::loadGenres);
-        films.forEach(this::loadLikes);
+        films.forEach(f -> {
+            if (f != null) {
+                loadGenres(f);
+                loadLikes(f);
+            }
+        });
         log.debug("Запрос всех фильмов из БД, найдено: {}", films.size());
         return films;
     }
@@ -139,8 +143,12 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> getById(int id) {
         String sql = "SELECT f.*, m.name as mpa_name FROM films f LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_rating_id WHERE f.film_id = ?";
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper, id);
-        films.forEach(this::loadGenres);
-        films.forEach(this::loadLikes);
+        films.forEach(f -> {
+            if (f != null) {
+                loadGenres(f);
+                loadLikes(f);
+            }
+        });
         return films.stream().findFirst();
     }
 
@@ -162,13 +170,21 @@ public class FilmDbStorage implements FilmStorage {
             genre.setName(rs.getString("name"));
             return genre;
         }, film.getId());
-        film.setGenres(new LinkedHashSet<>(genres));
+        if (genres != null) {
+            film.setGenres(new LinkedHashSet<>(genres));
+        } else {
+            film.setGenres(new LinkedHashSet<>());
+        }
     }
 
     private void loadLikes(Film film) {
         String sql = "SELECT user_id FROM likes WHERE film_id = ?";
         List<Integer> likes = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("user_id"), film.getId());
-        film.setLikes(new HashSet<>(likes));
+        if (likes != null) {
+            film.setLikes(new HashSet<>(likes));
+        } else {
+            film.setLikes(new HashSet<>());
+        }
     }
 
     public void addLike(int filmId, int userId) {
