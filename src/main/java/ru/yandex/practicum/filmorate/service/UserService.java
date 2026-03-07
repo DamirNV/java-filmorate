@@ -39,14 +39,12 @@ public class UserService {
     public UserResponse createUser(CreateUserRequest request) {
         log.info("Создание пользователя: {}", request);
 
-        // Проверка уникальности email
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new DuplicatedDataException("Пользователь с email " + request.getEmail() + " уже существует");
         }
 
         User user = UserMapper.mapToUser(request);
 
-        // Если имя не указано, используем логин
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.debug("Имя пользователя пустое, установлен логин: {}", user.getLogin());
@@ -66,7 +64,6 @@ public class UserService {
         User user = userRepository.findById(request.getId())
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + request.getId() + " не найден"));
 
-        // Проверка уникальности email при его изменении
         if (request.hasEmail() && !request.getEmail().equals(user.getEmail())) {
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
                 throw new DuplicatedDataException("Пользователь с email " + request.getEmail() + " уже существует");
@@ -75,7 +72,6 @@ public class UserService {
 
         User updatedUser = UserMapper.updateUserFields(user, request);
 
-        // Если имя стало пустым после обновления, используем логин
         if (updatedUser.getName() == null || updatedUser.getName().isBlank()) {
             updatedUser.setName(updatedUser.getLogin());
             log.debug("Имя пользователя пустое, установлен логин: {}", updatedUser.getLogin());
@@ -85,11 +81,9 @@ public class UserService {
         return UserMapper.mapToUserResponse(savedUser);
     }
 
-    // Методы для работы с друзьями
     public void sendFriendRequest(int userId, int friendId) {
         log.info("Отправка запроса в друзья: {} -> {}", userId, friendId);
 
-        // Проверяем существование пользователей
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
         userRepository.findById(friendId)
