@@ -25,9 +25,9 @@ public final class FilmMapper {
 
         if (request.getGenres() != null) {
             Set<Genre> genres = request.getGenres().stream()
-                    .map(id -> {
+                    .map(genreId -> {
                         Genre genre = new Genre();
-                        genre.setId(id);
+                        genre.setId(genreId.getId());
                         return genre;
                     })
                     .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -55,9 +55,9 @@ public final class FilmMapper {
         }
         if (request.hasGenres()) {
             Set<Genre> genres = request.getGenres().stream()
-                    .map(id -> {
+                    .map(genreId -> {
                         Genre genre = new Genre();
-                        genre.setId(id);
+                        genre.setId(genreId.getId());
                         return genre;
                     })
                     .collect(Collectors.toCollection(LinkedHashSet::new));

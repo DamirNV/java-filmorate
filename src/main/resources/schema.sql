@@ -60,10 +60,32 @@ CREATE TABLE IF NOT EXISTS friendship_status (
     name VARCHAR(20) NOT NULL UNIQUE
 );
 
--- Таблица дружбы (односторонняя)
+-- Таблица дружбы (с колонкой status_id!)
 CREATE TABLE IF NOT EXISTS friendship (
     user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     friend_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    status_id INTEGER NOT NULL REFERENCES friendship_status(status_id),
     PRIMARY KEY (user_id, friend_id),
     CHECK (user_id != friend_id)
 );
+
+-- Заполняем рейтинги MPA
+MERGE INTO mpa_rating (mpa_rating_id, code, description) VALUES
+(1, 'G', 'У фильма нет возрастных ограничений'),
+(2, 'PG', 'Детям рекомендуется смотреть фильм с родителями'),
+(3, 'PG-13', 'Детям до 13 лет просмотр не желателен'),
+(4, 'R', 'Лицам до 17 лет просматривать фильм можно только в присутствии взрослого'),
+(5, 'NC-17', 'Лицам до 18 лет просмотр запрещён');
+
+-- Заполняем жанры
+MERGE INTO genres (genre_id, name) VALUES
+(1, 'Комедия'),
+(2, 'Драма'),
+(3, 'Мультфильм'),
+(4, 'Триллер'),
+(5, 'Документальный'),
+(6, 'Боевик');
+
+-- Заполняем статусы дружбы
+MERGE INTO friendship_status (status_id, name) VALUES
+(1, 'FRIEND');

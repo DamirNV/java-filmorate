@@ -30,5 +30,11 @@ public class CreateFilmRequest {
     @NotNull(message = "Рейтинг MPA должен быть указан")
     private Mpa mpa;
 
-    private Set<@NotNull(message = "ID жанра не может быть пустым") Integer> genres;
+    private Set<GenreId> genres;
+
+    @Data
+    public static class GenreId {
+        @NotNull
+        private Integer id;
+    }
 }

@@ -14,7 +14,6 @@ import java.util.Set;
 public class UpdateFilmRequest {
 
     private Long id;
-
     private String name;
 
     @Size(max = 200, message = "Описание не может быть длиннее 200 символов")
@@ -27,8 +26,7 @@ public class UpdateFilmRequest {
     private Integer duration;
 
     private Mpa mpa;
-
-    private Set<@NotNull(message = "ID жанра не может быть пустым") Integer> genres;
+    private Set<CreateFilmRequest.GenreId> genres;
 
     public boolean hasName() {
         return name != null && !name.isBlank();
