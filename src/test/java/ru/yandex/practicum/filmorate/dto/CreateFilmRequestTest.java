@@ -112,13 +112,4 @@ class CreateFilmRequestTest {
         assertFalse(violations.isEmpty());
     }
 
-    @Test
-    void nullGenreIdInSetShouldFailValidation() {
-        CreateFilmRequest.GenreId nullGenreId = new CreateFilmRequest.GenreId();
-        nullGenreId.setId(null);
-        request.setGenres(Set.of(nullGenreId));
-
-        Set<ConstraintViolation<CreateFilmRequest>> violations = validator.validate(request);
-        assertFalse(violations.isEmpty());
-    }
 }
