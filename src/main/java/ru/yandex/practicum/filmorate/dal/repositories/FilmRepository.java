@@ -111,7 +111,8 @@ public class FilmRepository extends BaseRepository<Film> {
     }
 
     private void loadGenres(Film film) {
-        List<Genre> genres = jdbc.query(FIND_GENRES_QUERY, (rs, rowNum) -> {
+        String sql = "SELECT g.* FROM genres g JOIN film_genres fg ON g.genre_id = fg.genre_id WHERE fg.film_id = ? ORDER BY g.genre_id";
+        List<Genre> genres = jdbc.query(sql, (rs, rowNum) -> {
             Genre genre = new Genre();
             genre.setId(rs.getInt("genre_id"));
             genre.setName(rs.getString("name"));
