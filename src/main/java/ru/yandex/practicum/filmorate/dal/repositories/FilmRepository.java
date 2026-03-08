@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class FilmRepository extends BaseRepository<Film> {
@@ -110,9 +111,17 @@ public class FilmRepository extends BaseRepository<Film> {
     }
 
     private void saveGenres(int filmId, Set<Genre> genres) {
-        for (Genre genre : genres) {
-            jdbc.update(INSERT_GENRE_QUERY, filmId, genre.getId());
+        if (genres == null || genres.isEmpty()) {
+            return;
         }
+
+        String sql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+
+        List<Object[]> batchArgs = genres.stream()
+                .map(genre -> new Object[]{filmId, genre.getId()})
+                .collect(Collectors.toList());
+
+        jdbc.batchUpdate(sql, batchArgs);
     }
 
     private void loadGenres(Film film) {
